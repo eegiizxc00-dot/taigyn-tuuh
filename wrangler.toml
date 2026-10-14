@@ -1,3 +1,4 @@
+
 name = "taigyn-tuuh"
 pages_build_output_dir = "."
 compatibility_date = "2026-10-14"
@@ -7,3 +8,6 @@ binding = "DB"
 database_name = "taigyn-tuuh-db"
 database_id = "9edf13c5-8f18-4277-b769-f5dd44f70b02"
 migrations_dir = "migrations"
+
+[vars]
+ADMIN_EMAIL = "eegiierka00@gmail.com"
