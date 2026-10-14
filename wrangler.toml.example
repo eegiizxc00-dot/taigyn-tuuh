@@ -5,5 +5,5 @@ compatibility_date = "2026-10-14"
 [[d1_databases]]
 binding = "DB"
 database_name = "taigyn-tuuh-db"
-database_id = "REPLACE_WITH_D1_DATABASE_ID"
+database_id = "9edf13c5-8f18-4277-b769-f5dd44f70b02"
 migrations_dir = "migrations"
