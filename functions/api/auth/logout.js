@@ -1,0 +1,1 @@
+export async function onRequestPost({request}) { const secure=new URL(request.url).protocol==='https:'; return new Response(JSON.stringify({ok:true}),{headers:{'content-type':'application/json','Set-Cookie':`tt_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure?'; Secure':''}`}}); }
