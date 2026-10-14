@@ -1,56 +1,29 @@
-# Тайгын Түүх — төлбөртэй үргэлжлэл (starter)
+# Тайгын Түүх — Cloudflare Pages + D1 + QPay starter
 
-## Төлбөрийн дүрэм
-- Нэг зохиолын эхлэл үнэгүй (`preview_text`).
-- Үлдсэн хэсгийг нэг удаа 1,500₮ төлөөд тухайн хэрэглэгчид бүрмөсөн нээнэ.
-- Нээлтийн эрх `unlocks` хүснэгтэд `(user_id, story_id)` хосоор хадгалагдана.
-- Үлдсэн текстийг browser-д анхнаасаа илгээхгүй. Зөвхөн сервер эрхийг шалгасны дараа буцаана.
+## Сайтын удирдлагын самбар
+- `admin.html` — `/admin.html` хаягаар орж өгүүллэг нэмэх, засах, нийтлэх/нуух, устгах боломжтой.
+- `functions/api/admin/stories/*` — админ API; зөвхөн `ADMIN_EMAIL`-тэй таарсан, нэвтэрсэн имэйлд зөвшөөрөл өгнө.
+- `index.html` — D1 дээрх нийтлэгдсэн зохиолуудыг API-аас татаж нүүр хуудсанд харуулна.
+- `functions/api/payments/status.js` — QPay төлбөрийг сервер талаас шалгаж, баталгаажсан үед тухайн өгүүллэгийг нээнэ.
 
-## Багцын бүтэц
-- `index.html` — одоогийн статик загвар (API-тэй холбох ажил шаардлагатай)
-- `functions/api/auth/*` — имэйл/нууц үгийн бүртгэл, нэвтрэлт, гаралт, session
-- `functions/api/stories/*` — нийтэд нээлттэй жагсаалт ба эрх шалгасан зохиол унших API
-- `functions/api/payments/*` — QPay нэхэмжлэх болон callback баталгаажуулалт
-- `migrations/0001_schema.sql` — Cloudflare D1 өгөгдлийн сангийн схем
+## Cloudflare дээр заавал хийх тохиргоо
+1. **Workers & Pages → D1 SQL Database** дээр өгөгдлийн сан үүсгэнэ.
+2. D1 Console дээр `migrations/0001_schema.sql` файлын SQL-ийг бүтнээр нь ажиллуулна. Хэрэв аль хэдийн ажиллуулсан бол дахин ажиллуулах шаардлагагүй.
+3. Pages project → **Settings → Bindings → Add → D1 database** дээр binding name-ийг яг `DB` болгоод үүсгэсэн database-аа сонгоно. Дараа нь redeploy хийнэ.
+4. Pages project → **Settings → Variables and Secrets** дээр:
+   - `ADMIN_EMAIL` — админ самбарт ашиглах имэйл. Бүртгэлдээ энэ имэйлийг ашиглана.
+   - `SESSION_SECRET` — урт, санамсаргүй нууц түлхүүр (32+ тэмдэгт).
+   - `PUBLIC_BASE_URL` — Cloudflare Pages сайтын бүтэн HTTPS URL.
+   - QPay ашиглах үед: `QPAY_CLIENT_ID`, `QPAY_CLIENT_SECRET` (Secret), `QPAY_INVOICE_CODE`, `QPAY_BASE_URL`.
+5. `ADMIN_EMAIL` болон `SESSION_SECRET` тохируулсны дараа redeploy хийнэ.
+6. Сайтын `https://ТАНЫ-ХАЯГ.pages.dev/admin.html` хаягаар орж `ADMIN_EMAIL`-тэй ижил имэйлээр бүртгэл үүсгээд нэвтэрнэ. `Админ бүртгэл үүсгэх` товчийг эхний удаа ашиглана. Бүртгэл аль хэдийн үүссэн бол `Нэвтрэх` товчийг ашиглана.
+7. Нийтлэл нэмэхдээ нэр, slug (латин жижиг үсэг/тоо/зураас), үнэгүй эхлэл, төлбөртэй үргэлжлэлийг бөглөж хадгална. Нийтлэх сонголт идэвхтэй бол нүүр хуудсанд гарна.
 
-## Байршуулахын өмнөх шаардлагатай алхмууд
-1. Cloudflare Dashboard → Workers & Pages → D1 SQL Database үүсгэнэ.
-2. D1 дээр `migrations/0001_schema.sql` ажиллуулна.
-3. Pages Functions ашиглахын тулд энэ төслийг GitHub repo-той холбож deploy хийнэ. **Direct Upload нь Functions-ийг дэмждэггүй.**
-4. Pages Settings → Bindings дээр D1 binding нэрийг `DB` гэж тохируулж redeploy хийнэ.
-5. Settings → Variables and Secrets дээр дараах secrets тохируулна:
-   - `SESSION_SECRET`: дор хаяж 32 санамсаргүй тэмдэгтийн нууц түлхүүр
-   - `QPAY_CLIENT_ID`
-   - `QPAY_CLIENT_SECRET` (Secret)
-   - `QPAY_INVOICE_CODE`
-   - `PUBLIC_BASE_URL`: жишээ нь `https://taigyntuuh.pages.dev`
-   - `QPAY_BASE_URL`: sandbox туршилтад `https://merchant-sandbox.qpay.mn`, production-д `https://merchant.qpay.mn`
-6. QPay мерчантын эрх авч sandbox дээр invoice → callback → payment/check урсгалыг туршина. Дараа нь production credentials тавина.
-7. Нэг тест хэрэглэгч, нэг туршилтын зохиол оруулж туршина. Доорх SQL жишээг ашиглаж болно.
+## GitHub руу оруулах
+ZIP-ийг задлаад `taigyn-platform` хавтасны **доторх бүх файл, хавтсыг** GitHub repository-ийн үндсэн түвшинд байрлуулна. `index.html`-ийг шинэ хувилбараар солино; шинэ `admin.html`, `functions/api/admin/stories/` болон `functions/api/payments/status.js` файлуудыг нэмнэ. GitHub дээр Commit хийсний дараа Cloudflare автоматаар deploy хийнэ.
 
-## Туршилтын зохиол оруулах SQL
-`YOUR_STORY_ID`-г өөрийн UUID болгон солино.
-```sql
-INSERT INTO stories(id,slug,title,author_name,synopsis,preview_text,continuation_text,price_mnt,published)
-VALUES('YOUR_STORY_ID','taigyn-nuuts','Тайгын нууц','Тайгын Түүх','Нууцлаг роман',
-'Энэ бол үнэгүй унших эхлэл. Эндээс сонирхолтой хэсэг хүртэлх текстээ оруулна.',
-'ЭНД ТӨЛБӨРТЭЙ ҮРГЭЛЖЛЭЛИЙН БҮХ ТЕКСТ БАЙРЛАНА.',1500,1);
-```
-
-## API
-- `POST /api/auth/register` `{ "email":"...", "password":"10+ тэмдэгт" }`
-- `POST /api/auth/login` `{ "email":"...", "password":"..." }`
-- `POST /api/auth/logout`
-- `GET /api/auth/me`
-- `GET /api/stories`
-- `GET /api/stories/taigyn-nuuts`
-- `POST /api/payments/create` `{ "slug":"taigyn-nuuts" }`
-- `POST /api/payments/callback` — QPay callback URL
-
-## Аюулгүй байдал / production checklist
-- QPay credentials-ийг HTML, GitHub, клиент кодод хэзээ ч бүү байрлуул; зөвхөн Cloudflare Secrets.
-- QPay callback ирсэн гэдгээр нь шууд нээхгүй: сервер `/v2/payment/check` дуудаж, төлсөн дүнг шалгана.
-- HTTPS, Cloudflare rate limiting/WAF, abuse monitoring нэмнэ.
-- Нууц үг сэргээх имэйл, имэйл баталгаажуулалт, CSRF хамгаалалт, админы эрхийн удирдлага, контент удирдах самбар, нууц үг солих урсгал, нууцлал/үйлчилгээний нөхцөл, зохиогчийн эрхийн зөвшөөрөл, буцаалтын бодлогыг launch-аас өмнө нэмнэ.
-- Session нь HttpOnly + SameSite=Lax cookie; production-д Secure cookie хэрэглэнэ. Сайт HTTPS дээр ажиллуулах ёстой.
-- Энэ нь эхлэлийн scaffold; бүрэн production-ready гэж үзэж болохгүй. Нэвтрэлт ба төлбөрийн аюулгүй байдлын туршилт хийсний дараа бодит хэрэглэгчид нээнэ.
+## Төлбөрийн чухал анхааруулга
+- QPay мерчантын жинхэнэ эрх, тохиргоо хэрэгтэй. Эхлээд sandbox орчинд туршина.
+- `QPAY_CLIENT_SECRET` болон `SESSION_SECRET`-ийг GitHub кодод огт бичиж болохгүй; Cloudflare Secrets-д хадгална.
+- Бодит мөнгө авахаас өмнө QPay invoice → төлбөр шалгалт → нэг өгүүллэгийн unlock урсгалыг өөрийн тест хэрэглэгчээр шалгаж, буцаалт/нууцлал/үйлчилгээний нөхцөлийг бэлдэнэ.
+- Энэ бол эхлэлийн төсөл бөгөөд аюулгүй байдлын бүрэн аудит хийгдээгүй. Production launch-аас өмнө туршилт, rate limiting, нууц үг сэргээх, имэйл баталгаажуулалт зэрэг хамгаалалтыг нэмэх шаардлагатай.
