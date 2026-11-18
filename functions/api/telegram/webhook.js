@@ -97,12 +97,23 @@ export async function onRequestPost({ request, env }) {
     }
 
     // 5. /paid ORDER_ID команд шалгах
-    const match = text.match(
-      /^\/paid(?:@\w+)?\s+([a-f0-9-]{36})$/i
-    );
+    const cleanText = text
+      .replace(/[\u200B-\u200D\uFEFF]/g, "")
+      .trim();
 
-    if (!match) {
-      if (text.startsWith("/paid")) {
+    const parts = cleanText.split(/\s+/);
+    const command = (parts[0] || "").split("@")[0];
+    const orderId = parts[1] || "";
+
+    const validOrderId =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+    if (
+      command !== "/paid" ||
+      !validOrderId.test(orderId) ||
+      parts.length !== 2
+    ) {
+      if (command === "/paid") {
         await sendTelegram(
           env,
           "Командын хэлбэр буруу байна.\n\n" +
@@ -118,8 +129,6 @@ export async function onRequestPost({ request, env }) {
     if (!env.DB) {
       throw new Error("D1 database binding DB is missing");
     }
-
-    const orderId = match[1];
 
     const order = await env.DB.prepare(
       `SELECT id, user_id, story_id, amount_mnt, status
