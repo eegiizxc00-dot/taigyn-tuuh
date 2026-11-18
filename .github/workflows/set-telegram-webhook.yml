@@ -1,3 +1,4 @@
+
 name: Set Telegram Webhook
 
 on:
@@ -7,7 +8,15 @@ jobs:
   set-webhook:
     runs-on: ubuntu-latest
     steps:
-      # Өмнөх Register Telegram webhook алхам хэвээрээ байна
+      - name: Register Telegram webhook
+        env:
+          BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+        run: |
+          curl --fail-with-body -X POST \
+            "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" \
+            -H "Content-Type: application/json" \
+            -d "{\"url\":\"https://taigyn-tuuh.pages.dev/api/telegram/webhook\",\"secret_token\":\"${WEBHOOK_SECRET}\",\"drop_pending_updates\":true}"
 
       - name: Check Telegram Webhook
         env:
