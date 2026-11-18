@@ -13,11 +13,17 @@ jobs:
         env:
           BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           WEBHOOK_SECRET: ${{ secrets.TELEGRAM_WEBHOOK_SECRET }}
+          WEBHOOK_URL: https://taigyn-tuuh.pages.dev/api/telegram/webhook
         run: |
+          BODY=$(jq -n \
+            --arg url "$WEBHOOK_URL" \
+            --arg secret "$WEBHOOK_SECRET" \
+            '{url: $url, secret_token: $secret, drop_pending_updates: true}')
+
           curl --fail-with-body -X POST \
             "https://api.telegram.org/bot${BOT_TOKEN}/setWebhook" \
             -H "Content-Type: application/json" \
-            -d "{\"url\":\"https://taigyn-tuuh.pages.dev/api/telegram/webhook\",\"secret_token\":\"${WEBHOOK_SECRET}\",\"drop_pending_updates\":true}"
+            -d "$BODY"
 
       - name: Check Telegram Webhook
         env:
