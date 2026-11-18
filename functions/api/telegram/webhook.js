@@ -63,6 +63,7 @@ export async function onRequestPost({ request, env }) {
     console.log("Telegram update received", {
       hasMessage: Boolean(message),
       hasText: Boolean(text),
+      messageText: text || "",
       fromId: String(message?.from?.id ?? ""),
       chatId: String(message?.chat?.id ?? "")
     });
@@ -102,16 +103,14 @@ export async function onRequestPost({ request, env }) {
       .trim();
 
     const parts = cleanText.split(/\s+/);
-    const command = (parts[0] || "").split("@")[0];
+    const command = (parts[0] || "").split("@")[0].toLowerCase();
     const orderId = parts[1] || "";
-
-    const validOrderId =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
     if (
       command !== "/paid" ||
-      !validOrderId.test(orderId) ||
-      parts.length !== 2
+      !orderId ||
+      parts.length !== 2 ||
+      orderId.length > 100
     ) {
       if (command === "/paid") {
         await sendTelegram(
