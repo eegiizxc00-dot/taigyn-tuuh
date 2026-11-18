@@ -1,5 +1,12 @@
 
-import { json } from '../../../_shared.js';
+function json(data, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: {
+      'Content-Type': 'application/json; charset=utf-8'
+    }
+  });
+}
 
 async function sendTelegram(env, text) {
   const response = await fetch(
@@ -40,6 +47,7 @@ export async function onRequestPost({ request, env }) {
   }
 
   const ownerId = String(env.TELEGRAM_OWNER_ID || '');
+
   if (
     String(message.from?.id) !== ownerId ||
     String(message.chat?.id) !== ownerId
@@ -121,4 +129,3 @@ export async function onRequestPost({ request, env }) {
 
   return json({ ok: true });
 }
-
