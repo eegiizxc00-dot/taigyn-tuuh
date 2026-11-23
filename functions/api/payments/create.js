@@ -91,8 +91,9 @@ export async function onRequestPost({ request, env }) {
   }
 
   const unlocked = await env.DB.prepare(
-    `SELECT 1 FROM unlocks
-     WHERE user_id = ? AND story_id = ?`
+    `SELECT 1 FROM unlocks u JOIN orders o ON o.id=u.order_id AND o.user_id=u.user_id AND o.story_id=u.story_id
+     WHERE u.user_id = ? AND u.story_id = ? AND o.status='PAID'
+     AND datetime(COALESCE(o.paid_at,u.unlocked_at), '+48 hours')>datetime('now')`
   ).bind(user.id, story.id).first();
 
   if (unlocked) {
