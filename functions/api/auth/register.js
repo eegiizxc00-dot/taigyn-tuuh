@@ -16,8 +16,8 @@ export async function onRequestPost({request,env}) {
   const email = String(b?.email || '').trim().toLowerCase();
   const password = String(b?.password || '');
 
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 10 || password.length > 128) {
-    return json({error:'Зөв имэйл, 10-аас дээш тэмдэгттэй нууц үг оруулна уу.'},400);
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || password.length < 7 || password.length > 128) {
+    return json({error:'Имэйл хаягаа зөв оруулж, 7–128 тэмдэгттэй нууц үг сонгоно уу.'},400);
   }
 
   const {hash,salt} = await hashPassword(password);
