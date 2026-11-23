@@ -32,7 +32,7 @@ function evaluate(m1,m5){
  const momentumPass=trend==='BUY'?momentum>=51&&momentum<=72:trend==='SELL'?momentum<=49&&momentum>=28:false;
  const previous=m1.slice(-14,-1),high=Math.max(...previous.map(x=>x.high)),low=Math.min(...previous.map(x=>x.low));
  const broke=trend==='BUY'?last.close>high:trend==='SELL'?last.close<low:false;
- const sweep=trend==='BUY'?previous.slice(-5).some(x=>x.low<Math.min(...previous.slice(0,8).map(z=>z.low))&&x.close>x.low):previous.slice(-5).some(x=>x.high>Math.max(...previous.slice(0,8).map(z=>z.high))&&x.close<x.high):false;
+ const sweep=trend==='BUY'?previous.slice(-5).some(x=>x.low<Math.min(...previous.slice(0,8).map(z=>z.low))&&x.close>x.low):trend==='SELL'?previous.slice(-5).some(x=>x.high>Math.max(...previous.slice(0,8).map(z=>z.high))&&x.close<x.high):false;
  const candleBody=Math.abs(last.close-last.open),range=Math.max(.0001,last.high-last.low);
  const candlePass=trend==='BUY'?last.close>last.open&&candleBody/range>.35:trend==='SELL'?last.close<last.open&&candleBody/range>.35:false;
  const atrPct=volatility/last.close*100;
