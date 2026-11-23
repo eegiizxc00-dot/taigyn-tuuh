@@ -19,10 +19,25 @@
   .account-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.account-actions button{border:1px solid #c99d55;background:transparent;color:#f7e5c6;border-radius:6px;padding:9px 12px;cursor:pointer;font:inherit;font-size:13px}.account-actions button.primary{background:#c99d55;color:#15231d;font-weight:700}.account-actions .signedin{font-size:12px;color:#e7d6ac;max-width:175px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.auth-form{display:grid;gap:12px;margin-top:18px}.auth-form label{display:block;font-size:13px;font-weight:700;margin-bottom:5px}.auth-form input{width:100%;padding:11px;border:1px solid #d8d3c8;border-radius:6px;font:inherit}.auth-status{font-size:13px;white-space:pre-wrap;color:#8d3535}.auth-note{font-size:13px;color:#5f6b60;line-height:1.6}.auth-footer{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 @media(max-width:760px){.nav{flex-wrap:wrap}.account-actions{width:100%;justify-content:flex-end}}
 .reading-benefit{margin-top:25px;max-width:570px;background:rgba(255,253,248,.065);border:1px solid rgba(201,157,85,.38);border-radius:12px;padding:17px 20px;box-shadow:0 12px 28px rgba(0,0,0,.08)}.reading-benefit-head{display:flex;gap:13px;align-items:flex-start}.reading-benefit-icon{flex-shrink:0;width:35px;height:35px;border-radius:50%;background:rgba(201,157,85,.18);color:#e6c98d;display:grid;place-items:center;font-size:22px}.reading-benefit-head strong{display:block;color:#f6ead1;font-size:17px;margin-bottom:5px}.reading-benefit-head span:not(.reading-benefit-icon){display:block;color:#e4e8df;font-size:14px;line-height:1.65}.reading-benefit-head b{color:#e6c98d}.reading-benefit-note{border-top:1px solid rgba(255,255,255,.14);margin-top:12px;padding-top:11px;font-size:12px;line-height:1.55;color:#c2ccc1}@media(max-width:480px){.reading-benefit{padding:15px}.reading-benefit-head strong{font-size:16px}}
+
+  .mobile-menu-toggle{display:none;border:1px solid #c99d5580;border-radius:8px;background:rgba(255,255,255,.06);color:#f7e5c6;gap:8px;align-items:center;padding:9px 12px;font:600 14px inherit;cursor:pointer}
+  .mobile-menu-toggle span:first-child{font-size:20px;line-height:1}
+  @media(max-width:760px){
+    .nav{display:flex;flex-wrap:wrap;justify-content:space-between;gap:12px}
+    .mobile-menu-toggle{display:inline-flex;order:1;margin-left:auto}
+    .navlinks{display:none;order:3;flex-basis:100%;width:100%;flex-direction:column;align-items:stretch;gap:0;padding:7px;background:#223a2e;border:1px solid #c99d5540;border-radius:10px}
+    .navlinks.mobile-open{display:flex}
+    .navlinks a{display:block;color:#f7e5c6;padding:12px 14px;border-bottom:1px solid #ffffff13}
+    .navlinks a:last-child{border-bottom:0}
+    .navlinks a:focus-visible,.mobile-menu-toggle:focus-visible{outline:2px solid #e3bc77;outline-offset:2px}
+    .account-actions{order:2;width:100%;justify-content:flex-start;gap:8px}
+    .account-actions button{min-height:40px}
+    .account-actions .signedin{max-width:100%}
+  }
 </style>
 </head>
 <body>
-<header><div class="wrap nav"><a class="brand" href="#top"><span class="mark">✦</span><span>Тайгын Түүх</span></a><nav class="navlinks"><a href="#stories">Зохиолууд</a><a href="/classics.html">Үнэгүй сонгодог</a><a href="/mongolian-history.html">Монголын түүх</a><a href="#about">Бидний тухай</a><a href="#contact">Холбоо барих</a></nav><div class="account-actions"><span class="signedin" id="signedInEmail" hidden></span><button id="navLogin" type="button">Нэвтрэх</button><button id="navRegister" type="button" class="primary">Бүртгэл үүсгэх</button><button id="navLogout" type="button" hidden>Гарах</button></div></div></header>
+<header><div class="wrap nav"><a class="brand" href="#top"><span class="mark">✦</span><span>Тайгын Түүх</span></a><button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-expanded="false" aria-controls="mobileSiteNav" aria-label="Цэс нээх"><span aria-hidden="true">☰</span><span>Цэс</span></button><nav class="navlinks" id="mobileSiteNav" aria-label="Үндсэн цэс"><a href="#stories">Зохиолууд</a><a href="/classics.html">Үнэгүй сонгодог</a><a href="/mongolian-history.html">Монголын түүх</a><a href="#about">Бидний тухай</a><a href="#contact">Холбоо барих</a></nav><div class="account-actions"><span class="signedin" id="signedInEmail" hidden></span><button id="navLogin" type="button">Нэвтрэх</button><button id="navRegister" type="button" class="primary">Бүртгэл үүсгэх</button><button id="navLogout" type="button" hidden>Гарах</button></div></div></header>
 <main id="top">
   <section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Унших дуртай хүмүүст зориулав</div><h1>Түүх бүрийн цаана нэгэн ертөнц бий.</h1><p>Тайгын нам гүмээс хотын гэрэл хүртэл — сэтгэл хөдөлгөх роман, богино өгүүллэг, мартагдашгүй дүрүүдтэй танилцаарай.</p><div class="reading-benefit" aria-label="Худалдан авах нөхцөл"><div class="reading-benefit-head"><span class="reading-benefit-icon" aria-hidden="true">✧</span><div><strong>Бүртгэлгүйгээр ч уншаарай</strong><span>Өгүүллэгээ сонгоод, төлбөрөө баталгаажуулмагц <b>48 цаг</b> чөлөөтэй унших эрх нээгдэнэ.</span></div></div><div class="reading-benefit-note">Зочин эрх энэ хөтөч дээр хадгалагдана. Хөтчийн өгөгдлийг устгавал унших эрхээ алдаж болзошгүй.</div></div><div class="actions"><a class="btn" href="#stories">Зохиолууд үзэх&nbsp; ↗</a><a class="btn secondary" href="/classics.html">Үнэгүй сонгодог унших</a></div></div><div class="hero-art" aria-hidden="true"><div class="moon"></div><div class="pine"></div></div></div></section>
   <section class="section" id="stories"><div class="wrap"><div class="section-head"><div><div class="eyebrow">Унших булан</div><h2>Өөрийн дараагийн түүхээ олоорой</h2></div><p>Ангиллаа сонгоод, сонирхсон зохиолоо нээгээрэй.</p></div>
@@ -46,6 +61,13 @@
 document.getElementById('year').textContent=new Date().getFullYear();
 const $=id=>document.getElementById(id);
 const modal=$('reader');
+const mobileMenuToggle=$('mobileMenuToggle');
+const mobileSiteNav=$('mobileSiteNav');
+function closeMobileMenu(){mobileSiteNav.classList.remove('mobile-open');mobileMenuToggle.setAttribute('aria-expanded','false');mobileMenuToggle.setAttribute('aria-label','Цэс нээх')}
+mobileMenuToggle.addEventListener('click',()=>{const opening=!mobileSiteNav.classList.contains('mobile-open');mobileSiteNav.classList.toggle('mobile-open',opening);mobileMenuToggle.setAttribute('aria-expanded',String(opening));mobileMenuToggle.setAttribute('aria-label',opening?'Цэс хаах':'Цэс нээх')});
+mobileSiteNav.querySelectorAll('a').forEach(link=>link.addEventListener('click',closeMobileMenu));
+document.addEventListener('keydown',event=>{if(event.key==='Escape')closeMobileMenu()});
+
 let allStories=[];
 let activeSlug='';
 let authMode='login';
