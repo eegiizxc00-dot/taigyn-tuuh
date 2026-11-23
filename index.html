@@ -21,7 +21,7 @@
 <body>
 <header><div class="wrap nav"><a class="brand" href="#top"><span class="mark">✦</span><span>Тайгын Түүх</span></a><nav class="navlinks"><a href="#stories">Зохиолууд</a><a href="#about">Бидний тухай</a><a href="#contact">Холбоо барих</a></nav></div></header>
 <main id="top">
-  <section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Унших дуртай хүмүүст зориулав</div><h1>Түүх бүрийн цаана нэгэн ертөнц бий.</h1><p>Тайгын нам гүмээс хотын гэрэл хүртэл — сэтгэл хөдөлгөх роман, богино өгүүллэг, мартагдашгүй дүрүүдтэй танилцаарай.</p><div class="actions"><a class="btn" href="#stories">Зохиолууд үзэх&nbsp; ↗</a><a class="btn secondary" href="#about">Платформын тухай</a></div></div><div class="hero-art" aria-hidden="true"><div class="moon"></div><div class="pine"></div></div></div></section>
+  <section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Унших дуртай хүмүүст зориулав</div><h1>Түүх бүрийн цаана нэгэн ертөнц бий.</h1><p>Тайгын нам гүмээс хотын гэрэл хүртэл — сэтгэл хөдөлгөх роман, богино өгүүллэг, мартагдашгүй дүрүүдтэй танилцаарай.</p><p style="font-size:15px;color:#e8d6a8">Бүртгэл үүсгэх шаардлагагүй. Өгүүллэгээ сонгож төлбөрөө төлөөд баталгаажмагц 48 цагийн турш энэ төхөөрөмж, хөтөч дээрээ уншина. Хөтчийн өгөгдлөө устгавал зочин эрхээ алдаж болзошгүй.</p><div class="actions"><a class="btn" href="#stories">Зохиолууд үзэх&nbsp; ↗</a><a class="btn secondary" href="#about">Платформын тухай</a></div></div><div class="hero-art" aria-hidden="true"><div class="moon"></div><div class="pine"></div></div></div></section>
   <section class="section" id="stories"><div class="wrap"><div class="section-head"><div><div class="eyebrow">Унших булан</div><h2>Өөрийн дараагийн түүхээ олоорой</h2></div><p>Ангиллаа сонгоод, сонирхсон зохиолоо нээгээрэй.</p></div>
     <div class="filters" aria-label="Зохиолын ангилал"><button class="filter active" data-filter="all">Бүгд</button><button class="filter" data-filter="romance">Хайр дурлал</button><button class="filter" data-filter="mystery">Нууц, адал явдал</button><button class="filter" data-filter="drama">Драма</button><button class="filter" data-filter="fantasy">Уран зөгнөл</button></div>
     <div class="cards" id="cards">
@@ -258,7 +258,7 @@ async function buyStory(slug){
     panel.append(copy);
 
     const warning=document.createElement('p');
-    warning.textContent='Шилжүүлэг хийсний дараа төлбөрийг админ шалгаж баталгаажуулна. Баталгаажсаны дараа энэ хуудсанд буцаж ирээд “Төлбөрөө шалгах” товчийг дарна уу.';
+    warning.textContent='Бүртгэл шаардлагагүй. Төлбөр баталгаажсаны дараа 48 цаг энэ хөтөч дээр унших эрхтэй. Хөтчийн cookie-г устгахгүй, өөр төхөөрөмж рүү шилжихгүй байхыг анхаарна уу. Шилжүүлсний дараа “Төлбөрөө шалгах” товчийг дарна уу.';
     warning.className='note';
     panel.append(warning);
 
