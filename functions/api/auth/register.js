@@ -1,5 +1,5 @@
 
-import {json,bodyJson,randomId,hashPassword,signSession,sessionCookie} from '../../_shared.js';
+import {json,bodyJson,randomId,hashPassword,signSession,sessionCookie,currentUser} from '../../_shared.js';
 
 export async function onRequestPost({request,env}) {
   if (!env.DB || !env.SESSION_SECRET) {
@@ -21,10 +21,21 @@ export async function onRequestPost({request,env}) {
   }
 
   const {hash,salt} = await hashPassword(password);
-  const id = randomId();
+  const guestSession = await currentUser(request,env);
+  const guest = guestSession?.email?.endsWith('@guest.invalid')
+    ? await env.DB.prepare('SELECT id,email FROM users WHERE id=? AND email=?').bind(guestSession.id,guestSession.email).first()
+    : null;
+  let id=guest?.id || randomId();
 
   try {
-    await env.DB.prepare('INSERT INTO users(id,email,password_hash,password_salt) VALUES(?,?,?,?)').bind(id,email,hash,salt).run();
+    if(guest){
+      // Preserve active purchases by converting this guest identity in-place.
+      const changed=await env.DB.prepare('UPDATE users SET email=?,password_hash=?,password_salt=? WHERE id=? AND email=?')
+        .bind(email,hash,salt,guest.id,guest.email).run();
+      if(!changed.meta?.changes)return json({error:'Зочин бүртгэлийг шинэчилж чадсангүй.'},409);
+    }else{
+      await env.DB.prepare('INSERT INTO users(id,email,password_hash,password_salt) VALUES(?,?,?,?)').bind(id,email,hash,salt).run();
+    }
   } catch {
     return json({error:'Энэ имэйл бүртгэлтэй эсвэл бүртгэл үүсгэх боломжгүй байна.'},409);
   }
