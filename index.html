@@ -151,8 +151,8 @@ async function openStory(slug){
     const note=document.createElement('p');
     note.className='note';
     note.textContent=s.unlocked
-      ?'Төлбөр баталгаажсан — үргэлжлэл нээлттэй.'
-      :'Үнэгүй эхлэл. Үлдсэн хэсгийг нэг удаа '+Number(s.price_mnt).toLocaleString('mn-MN')+'₮ төлөөд нээнэ.';
+      ?'Төлбөр баталгаажсан — 48 цагийн эрхтэй. Эрх дуусах: '+new Date(s.expiresAt).toLocaleString('mn-MN',{timeZone:'Asia/Ulaanbaatar'})+' (Улаанбаатарын цагаар).'
+      :'Үнэгүй эхлэл. Үргэлжлэлийг '+Number(s.price_mnt).toLocaleString('mn-MN')+'₮ төлж 48 цагийн хугацаатай нээнэ.';
 
     $('readerText').append(document.createElement('br'),document.createElement('br'));
 
@@ -278,10 +278,10 @@ async function buyStory(slug){
         );
 
         if(result.paid&&result.unlocked){
-          alert('Төлбөр баталгаажлаа. Үргэлжлэл нээгдлээ.');
+          alert('Төлбөр баталгаажлаа. Өгүүллэг 48 цагийн хугацаатай нээгдлээ.');
           await openStory(slug);
         }else{
-          alert('Төлбөр хараахан баталгаажаагүй байна. Дараа дахин шалгана уу.');
+          alert(result.paid?'Энэ худалдан авалтын 48 цагийн унших эрх дууссан байна.':'Төлбөр хараахан баталгаажаагүй байна. Дараа дахин шалгана уу.');
         }
       }catch(error){
         alert(error.message);
