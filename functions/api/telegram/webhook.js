@@ -189,9 +189,12 @@ export async function onRequestPost({ request, env }) {
 
     // 8. Зохиолын түгжээ тайлах
     await env.DB.prepare(
-      `INSERT OR IGNORE INTO unlocks
+      `INSERT INTO unlocks
        (user_id, story_id, order_id)
-       VALUES (?, ?, ?)`
+       VALUES (?, ?, ?)
+       ON CONFLICT(user_id,story_id) DO UPDATE SET
+         order_id=excluded.order_id,
+         unlocked_at=datetime('now')`
     )
       .bind(
         updated.user_id,
@@ -206,7 +209,7 @@ export async function onRequestPost({ request, env }) {
       "Төлбөр амжилттай баталгаажлаа!\n\n" +
       "Захиалгын ID: " + orderId + "\n" +
       "Дүн: " + order.amount_mnt + "₮\n" +
-      "Зохиолын түгжээ тайлагдлаа."
+      "Зохиол 48 цагийн турш нээгдлээ."
     );
 
     return json({ ok: true });
