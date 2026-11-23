@@ -14,7 +14,7 @@ export async function onRequestPost({request,env}) {
    // Atomic/idempotent: only one unlock row per user/story.
    await env.DB.batch([
     env.DB.prepare("UPDATE orders SET status='PAID',qpay_payment_id=?,paid_at=datetime('now') WHERE id=? AND status='PENDING'").bind(String(matching.payment_id||''),order.id),
-    env.DB.prepare('INSERT INTO unlocks(user_id,story_id,order_id) VALUES(?,?,?) ON CONFLICT(user_id,story_id) DO UPDATE SET order_id=excluded.order_id,unlocked_at=datetime('now')').bind(order.user_id,order.story_id,order.id)
+    env.DB.prepare(`INSERT INTO unlocks(user_id,story_id,order_id) VALUES(?,?,?) ON CONFLICT(user_id,story_id) DO UPDATE SET order_id=excluded.order_id,unlocked_at=datetime('now')`).bind(order.user_id,order.story_id,order.id)
    ]);
   }
   return json({ok:true});
