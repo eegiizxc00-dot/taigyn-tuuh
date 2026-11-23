@@ -7,7 +7,17 @@ function fromB64(s) { s=s.replace(/-/g,'+').replace(/_/g,'/'); while(s.length%4)
 export async function hashPassword(password, saltText) {
   const salt = saltText ? fromB64(saltText) : crypto.getRandomValues(new Uint8Array(16));
   const key = await crypto.subtle.importKey('raw', encoder.encode(password), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({name:'PBKDF2',salt,iterations:210000,hash:'SHA-256'}, key, 256);
+  // Cloudflare workerd accepts at most 100,000 PBKDF2 iterations per call.
+  // Chain three domain-separated steps instead of one unsupported 210,000-step call.
+  let stageKey = key;
+  let bits;
+  for (const [round, iterations] of [100000, 100000, 10000].entries()) {
+    const roundSalt = new Uint8Array(salt.length + 1);
+    roundSalt.set(salt);
+    roundSalt[salt.length] = round + 1;
+    bits = await crypto.subtle.deriveBits({name:'PBKDF2',salt:roundSalt,iterations,hash:'SHA-256'}, stageKey, 256);
+    if (round < 2) stageKey = await crypto.subtle.importKey('raw', bits, 'PBKDF2', false, ['deriveBits']);
+  }
   return {hash:toB64(bits), salt:toB64(salt)};
 }
 export async function signSession(user, secret) {
