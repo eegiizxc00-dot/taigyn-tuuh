@@ -63,6 +63,7 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
 .cover.has-image:before,.cover.has-image:after{display:none}
 .rq-panel{background:#fffefa;border:1px solid #e6e5dc;border-radius:24px;padding:clamp(20px,5vw,48px);max-width:850px;margin:auto;box-shadow:0 12px 45px #10241e0a}.rq-panel h2{margin:10px 0}.rq-panel p{line-height:1.75;color:#536359}.rq-note{display:block;margin-top:24px;color:#68766d;line-height:1.6}.rq-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:20px 0}.rq-option{font:inherit;text-align:left;background:#f5f6ef;border:1px solid #dce3d7;border-radius:12px;padding:14px;cursor:pointer;color:#193f30}.rq-option:hover,.rq-option:focus-visible{background:#e2eddf}.rq-track{height:8px;background:#e6ebe3;border-radius:20px;overflow:hidden;margin:12px 0 22px}.rq-track span{display:block;height:100%;background:#49775c;transition:width .2s}.rq-score{margin:10px 0}.rq-score .rq-track{margin:5px 0 12px}.rq-recs{display:grid;gap:8px;margin:18px 0}.rq-recs button{text-align:left}.rq-actions{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}.rq-panel button:focus-visible{outline:3px solid #b68e49;outline-offset:2px}
 .payment-dialog{box-sizing:border-box;width:min(440px,calc(100% - 28px));max-height:calc(100dvh - 32px);margin:auto;border:1px solid #e8e1d4;border-radius:16px;padding:0;background:#fffdf8;color:#15231d;box-shadow:0 24px 80px #0006;overflow:auto}.payment-dialog::backdrop{background:#0c1914b8;backdrop-filter:blur(3px)}.payment-inner{padding:22px;line-height:1.6}.payment-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.payment-top h3{margin:0;font-size:22px}.payment-close{background:none;border:0;font-size:28px;cursor:pointer;color:#314438;padding:0 8px}.payment-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f1f1e9;border-radius:9px;padding:10px 12px;margin:8px 0}.payment-row>div{min-width:0}.payment-row small,.payment-row strong{display:block;overflow-wrap:anywhere}.payment-row small{color:#657368;font-size:12px}.payment-copy{flex-shrink:0;border:1px solid #cad6c8;border-radius:8px;padding:9px 12px;background:#fff;color:#214a35;cursor:pointer;font-weight:700}.payment-check{width:100%;justify-content:center}.payment-status:empty{display:none}.payment-status{color:#87501f;font-size:14px}.payment-inner .note{font-size:13px}.payment-dialog button:focus-visible{outline:2px solid #b68e49;outline-offset:2px}
+.reader-free-text{-webkit-user-select:text;user-select:text}.reader-paid-text{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 </style>
 </head>
 <body>
@@ -255,6 +256,19 @@ function renderStories(filter='all'){
 const baseTitle=document.title;
 function storyUrl(slug){const u=new URL('/',location.origin);u.searchParams.set('story',slug);return u.href}
 function urlSlug(){return new URL(location.href).searchParams.get('story')||''}
+$('readerText').addEventListener('copy',event=>{
+  const paid=$('readerText').querySelector('.reader-paid-text');
+  const selection=window.getSelection();
+  if(!paid||!selection||selection.isCollapsed)return;
+  for(let i=0;i<selection.rangeCount;i++){
+    if(selection.getRangeAt(i).intersectsNode(paid)){
+      event.preventDefault();
+      const preview=$('readerText').querySelector('.reader-free-text');
+      if(preview&&selection.getRangeAt(i).intersectsNode(preview))event.clipboardData?.setData('text/plain',preview.textContent);
+      return;
+    }
+  }
+});
 async function openStory(slug, syncUrl=true){
   if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))return;
   if(syncUrl && urlSlug()!==slug)history.pushState(null,'',storyUrl(slug));
@@ -278,7 +292,27 @@ async function openStory(slug, syncUrl=true){
     $('storyShare').hidden=false;
 
     $('storyFacebook').href='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(storyUrl(slug));
-    $('readerText').textContent=s.preview_text;
+    $('readerText').replaceChildren();
+    const preview=document.createElement('div');
+    preview.className='reader-free-text';
+    preview.textContent=s.preview_text;
+    $('readerText').append(preview);
+    const copyPreview=document.createElement('button');
+    copyPreview.type='button';
+    copyPreview.className='read';
+    copyPreview.style.cssText='margin-top:12px;white-space:normal';
+    copyPreview.textContent='Үнэгүй хэсгийг хуулах';
+    copyPreview.onclick=async()=>{
+      try{
+        await navigator.clipboard.writeText(s.preview_text);
+        copyPreview.textContent='Хууллаа ✓';
+        setTimeout(()=>{copyPreview.textContent='Үнэгүй хэсгийг хуулах'},1800);
+      }catch{
+        const range=document.createRange();range.selectNodeContents(preview);
+        const selection=window.getSelection();selection.removeAllRanges();selection.addRange(range);
+      }
+    };
+    $('readerText').append(copyPreview);
 
     const note=document.createElement('p');
     note.className='note';
@@ -292,6 +326,7 @@ async function openStory(slug, syncUrl=true){
     if(s.unlocked&&s.continuation){
       const rest=document.createElement('div');
       rest.textContent=s.continuation;
+      rest.className='reader-paid-text';
       rest.style.marginTop='20px';
       $('readerText').append(note,rest);
       requestAnimationFrame(updateReaderProgress);
