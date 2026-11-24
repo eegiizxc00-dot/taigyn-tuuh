@@ -74,7 +74,7 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
   <section class="discovery-section" aria-label="Унших хэсгүүд"><div class="wrap discovery-grid"><a class="discovery-tile" href="#stories"><span class="discovery-icon">✧</span><span><strong>Өгүүллэгийн сан</strong><small>Төрөл бүрийн зохиолтой танилцах</small></span><span class="discovery-arrow">↗</span></a><a class="discovery-tile" href="/classics.html"><span class="discovery-icon">❦</span><span><strong>Үнэгүй сонгодог</strong><small>Сургамжит үлгэрүүдийг унших</small></span><span class="discovery-arrow">↗</span></a><a class="discovery-tile" href="/mongolian-history.html"><span class="discovery-icon">⌘</span><span><strong>Монголын түүх</strong><small>Өнгөрснөөс өнөөдөр хүртэл</small></span><span class="discovery-arrow">↗</span></a></div></section>
 <section class="section" id="readerQuiz"><div class="wrap"><div class="rq-panel"><div class="eyebrow">Уншигчийн тест · Үнэгүй</div><h2>Таны доторх уншигч</h2><p>12 асуултад хариулж, өөрт тохирох номын төрлийг олоорой.</p><div id="rqContent" aria-live="polite"></div><small class="rq-note">Энэ нь унших сонирхлын тест бөгөөд сэтгэл зүйн мэргэжлийн оношилгоо биш. Хариултыг серверт хадгалахгүй.</small></div></div></section>
   <section class="section" id="stories"><div class="wrap"><div class="section-head"><div><div class="eyebrow">Унших булан</div><h2>Өөрийн дараагийн түүхээ олоорой</h2></div><p>Ангиллаа сонгоод, сонирхсон зохиолоо нээгээрэй.</p></div>
-    <div class="filters" aria-label="Зохиолын ангилал"><button class="filter active" data-filter="all">Бүгд</button><button class="filter" data-filter="romance">Хайр дурлал</button><button class="filter" data-filter="mystery">Нууц, адал явдал</button><button class="filter" data-filter="drama">Драма</button><button class="filter" data-filter="fantasy">Уран зөгнөл</button><button class="filter" data-filter="erotic">Эротик өгүүллэг · 18+</button></div>
+    <div class="filters" aria-label="Зохиолын ангилал"><button class="filter active" data-filter="all">Бүгд</button><button class="filter" data-filter="romance">Хайр дурлал</button><button class="filter" data-filter="mystery">Нууц, адал явдал</button><button class="filter" data-filter="drama">Драма</button><button class="filter" data-filter="fantasy">Уран зөгнөл</button><button class="filter" data-filter="wisdom">Өвгөдийн ухаан</button><button class="filter" data-filter="erotic">Эротик өгүүллэг · 18+</button></div>
     <div class="cards" id="cards">
       <article class="card" data-category="mystery"><div class="cover"><span class="symbol">☾</span><span class="genre">Нууц · Адал явдал</span></div><div class="card-body"><h3>Тайгын шивнээ</h3><p>Ойн гүнд мартагдсан нэгэн захидал хуучин нууцыг дахин амилуулна.</p><div class="meta"><span>Богино өгүүллэг</span><button class="read" data-story="taiga">Унших →</button></div></div></article>
       <article class="card" data-category="romance"><div class="cover amber"><span class="symbol">❧</span><span class="genre">Хайр дурлал</span></div><div class="card-body"><h3>Намрын сүүлчийн захиа</h3><p>Хэлж амжаагүй үгс, илгээгээгүй захиа хоёрын хооронд үлдсэн хайр.</p><div class="meta"><span>Роман · Эхлэл</span><button class="read" data-story="letter">Унших →</button></div></div></article>
@@ -182,6 +182,7 @@ async function api(url,method='GET',data){
 
 function categoryFor(s){
   const title=(s.title||'').trim().toLowerCase();
+  if(s.slug==='daisny-ach'||/өвгөдийн ухаан/.test((s.synopsis||'').toLowerCase()))return 'wisdom';
   if(title==='мөнх тэнгэрийн онгод')return 'fantasy';
   if(title==='сүүлчийн цас')return 'romance';
   const t=(s.title+' '+s.synopsis).toLowerCase();
@@ -207,7 +208,7 @@ function renderStories(filter='all'){
     article.dataset.category=cat;
 
     const cover=document.createElement('div');
-    cover.className='cover '+({romance:'rose',fantasy:'blue',mystery:'moss',drama:'plum',erotic:'plum'}[cat]);
+    cover.className='cover '+({romance:'rose',fantasy:'blue',mystery:'moss',drama:'plum',erotic:'plum',wisdom:'amber'}[cat]);
 
     const fallbackCover = /мөнх\s*тэнгэрийн\s*онгод/i.test(s.title || '') || s.slug === 'monkh-tengeriin-ongod' ? '/images/monkh-tengeriin-ongod.webp' : (/сүүлчийн\s*цас/i.test(s.title || '') || cat === 'romance') ? '/images/love-story.webp' : '';
     const coverUrl = String(s.cover_url || '').trim() || fallbackCover;
@@ -224,7 +225,7 @@ function renderStories(filter='all'){
 
     const genre=document.createElement('span');
     genre.className='genre';
-    genre.textContent=cat==='erotic'?'Эротик өгүүллэг · 18+':cat==='romance'?'Хайр дурлал':cat==='fantasy'?'Уран зөгнөл':cat==='mystery'?'Нууц · Адал явдал':'Өгүүллэг';
+    genre.textContent=cat==='wisdom'?'Өвгөдийн ухаан':cat==='erotic'?'Эротик өгүүллэг · 18+':cat==='romance'?'Хайр дурлал':cat==='fantasy'?'Уран зөгнөл':cat==='mystery'?'Нууц · Адал явдал':'Өгүүллэг';
     if(!coverUrl)cover.append(symbol);
     cover.append(genre);
 
@@ -315,7 +316,7 @@ const bookReader=(()=>{
    }
   }
   split(story.preview_text,'free');
-  if(validPaid())split(story.continuation,'paid');else pages.push({part:'lock',offset:0});
+  if(validPaid())split(story.continuation,'paid');else if(!story.complete_free)pages.push({part:'lock',offset:0});
   if(!pages.length)pages.push({part:'free',offset:0,text:''});
   index=Math.floor(restore(a)/cols)*cols;render();
  }
@@ -437,7 +438,10 @@ async function openStory(slug, syncUrl=true){
     $('readerText').append(document.createElement('br'),document.createElement('br'));
     requestAnimationFrame(updateReaderProgress);
 
-    if(s.unlocked&&s.continuation){
+    if(s.complete_free){
+      note.textContent='Бүрэн үнэгүй · Өвгөдийн ухаан';
+      $('readerText').append(note);
+    }else if(s.unlocked&&s.continuation){
       const rest=document.createElement('div');
       rest.textContent=s.continuation;
       rest.className='reader-paid-text';

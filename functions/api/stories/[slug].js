@@ -1,5 +1,7 @@
 import {json,currentUser} from '../../_shared.js';
+import {wisdomStory} from '../../_wisdom.js';
 export async function onRequestGet({request,env,params}) {
+ if(params.slug===wisdomStory.slug)return json({story:wisdomStory});
  const user=await currentUser(request,env);
  const s=await env.DB.prepare('SELECT id,slug,title,author_name,synopsis,cover_url,preview_text,continuation_text,price_mnt FROM stories WHERE slug=? AND published=1').bind(params.slug).first();
  if(!s)return json({error:'Зохиол олдсонгүй.'},404);
