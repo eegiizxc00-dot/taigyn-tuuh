@@ -25,3 +25,12 @@ header .brand,.hero .eyebrow,.featured-book-front>span{color:#FFF0B5!important}
 #reader .modal-box{box-shadow:0 24px 90px #020c19a0;border:1px solid #fff0b540;scrollbar-color:#b5aa91 transparent}
 @media(min-width:761px){#reader{padding:28px;align-items:center;justify-content:center}#reader .modal-box{width:min(100%,760px);max-width:760px;max-height:calc(100vh - 56px);max-height:calc(100dvh - 56px);height:auto;border-radius:20px}}
 @media(max-width:760px){#reader{padding:0;align-items:stretch;justify-content:stretch;background-image:none}#reader .modal-box{width:100%;max-width:none;height:100vh;height:100dvh;max-height:none;border-radius:0;border:0;box-shadow:none;padding-bottom:max(42px,env(safe-area-inset-bottom))}#reader .modal-top{gap:8px}#reader .modal-top>div:first-child{min-width:0}#reader .reader-controls{flex-shrink:0}}
+
+/* Reader quiz: warm paper, subtle champagne-gold ornament */
+#readerQuiz{position:relative;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 12% 15%,#fff4d7 0%,transparent 44%),radial-gradient(ellipse at 92% 85%,#dce6ee80 0%,transparent 42%),linear-gradient(135deg,#f9f6ef,#eee9df);padding-block:clamp(48px,7vw,100px)}
+#readerQuiz::before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background-image:radial-gradient(#ad8d482b .8px,transparent .8px);background-size:23px 23px;mask-image:linear-gradient(90deg,#000,transparent 32%,transparent 68%,#000)}
+#readerQuiz::after{content:"";position:absolute;z-index:-1;pointer-events:none;right:-130px;bottom:-230px;width:560px;height:560px;border:1px solid #b99b5b33;border-radius:50%;box-shadow:0 0 0 38px #b99b5b0d,0 0 0 78px #b99b5b0a}
+#readerQuiz .rq-panel{background:#fffefa;border:1px solid #d9c7a388;border-radius:24px;box-shadow:0 20px 60px #10283d0d,0 3px 12px #ac8b4310}
+#readerQuiz .eyebrow{color:#8b672d}
+#readerQuiz h2{color:#10283d}
+@media(max-width:600px){#readerQuiz{padding-block:36px}#readerQuiz .rq-panel{border-radius:18px;padding:24px 20px}#readerQuiz::after{width:260px;height:260px;right:-130px;bottom:-140px}}
