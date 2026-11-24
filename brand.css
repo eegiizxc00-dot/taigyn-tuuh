@@ -19,3 +19,9 @@ header,.top{background:#10283d!important}
 header .brand,.hero .eyebrow,.featured-book-front>span{color:#FFF0B5!important}
 .hero .btn:not(.secondary),.account-actions .primary{background:#FFF0B5!important;color:#10283D!important;border-color:#FFF0B5!important}
 .hero .btn:not(.secondary):hover,.account-actions .primary:hover{background:#F1DFA0!important}
+
+/* Immersive, responsive reading backdrop */
+#reader{background-color:#10283d;background-image:url("/images/reader-atmosphere.svg"),radial-gradient(ellipse at 78% 55%,#345b7a 0%,transparent 48%),radial-gradient(ellipse at 12% 15%,#344c63 0%,transparent 40%),linear-gradient(135deg,#0b1929,#183a55 60%,#0b1929);background-size:cover,cover,cover,cover;background-position:center;background-repeat:no-repeat}
+#reader .modal-box{box-shadow:0 24px 90px #020c19a0;border:1px solid #fff0b540;scrollbar-color:#b5aa91 transparent}
+@media(min-width:761px){#reader{padding:28px;align-items:center;justify-content:center}#reader .modal-box{width:min(100%,760px);max-width:760px;max-height:calc(100vh - 56px);max-height:calc(100dvh - 56px);height:auto;border-radius:20px}}
+@media(max-width:760px){#reader{padding:0;align-items:stretch;justify-content:stretch;background-image:none}#reader .modal-box{width:100%;max-width:none;height:100vh;height:100dvh;max-height:none;border-radius:0;border:0;box-shadow:none;padding-bottom:max(42px,env(safe-area-inset-bottom))}#reader .modal-top{gap:8px}#reader .modal-top>div:first-child{min-width:0}#reader .reader-controls{flex-shrink:0}}
