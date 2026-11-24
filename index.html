@@ -86,7 +86,7 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
 </main>
 <footer><div class="wrap foot"><span>© <span id="year"></span> Тайгын Түүх. Бүх эрх хуулиар хамгаалагдана.</span><span>Монгол хэлээрх түүх, роман, өгүүллэг.</span></div></footer>
 <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="modal-box" style="max-width:440px"><div class="modal-top"><h2 id="authTitle">Нэвтрэх</h2><button class="close" id="closeAuth" type="button" aria-label="Хаах">×</button></div><p class="auth-note">Бүртгэлгүйгээр өгүүллэг худалдан авах боломжтой. Бүртгүүлбэл өөрийн бүртгэлээрээ нэвтэрч болно.</p><form class="auth-form" id="authForm"><div><label for="authEmail">Имэйл</label><input id="authEmail" type="email" required autocomplete="email"></div><div><label for="authPassword">Нууц үг</label><input id="authPassword" type="password" required autocomplete="current-password"><p id="passwordHint" class="auth-note" hidden>Анхааруулга: Нууц үг хамгийн багадаа 7 тэмдэгттэй байна. Аюулгүй байдлаа хамгаалахын тулд урт, таахад хэцүү нууц үг сонгоорой.</p></div><p id="authStatus" class="auth-status" role="status"></p><div class="auth-footer"><button id="authSubmit" type="submit" class="btn">Нэвтрэх</button><button type="button" id="authSwitch" class="read">Бүртгэл үүсгэх</button></div></form></div></div>
-<div class="modal" id="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle"><div class="modal-box" id="readerBox" tabindex="-1"><div class="modal-top"><div><div class="eyebrow">Тайгын Түүх · Унших булан</div><h2 id="readerTitle">Зохиолын нэр</h2></div><div class="reader-controls" aria-label="Унших тохиргоо"><button id="fontSmaller" type="button" aria-label="Үсгийн хэмжээг багасгах">A−</button><button id="fontLarger" type="button" aria-label="Үсгийн хэмжээг томруулах">A+</button><button class="close" id="closeReader" type="button" aria-label="Унших цонхыг хаах">×</button></div></div><div class="reader-progress" aria-hidden="true"><div id="readerProgressBar"></div></div><div class="modal-text" id="readerText"></div></div></div>
+<div class="modal" id="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle"><div class="modal-box" id="readerBox" tabindex="-1"><div class="modal-top"><div><div class="eyebrow">Тайгын Түүх · Унших булан</div><h2 id="readerTitle">Зохиолын нэр</h2></div><div class="reader-controls" aria-label="Унших тохиргоо"><button id="fontSmaller" type="button" aria-label="Үсгийн хэмжээг багасгах">A−</button><button id="fontLarger" type="button" aria-label="Үсгийн хэмжээг томруулах">A+</button><button class="close" id="closeReader" type="button" aria-label="Унших цонхыг хаах">×</button></div></div><div class="reader-progress" aria-hidden="true"><div id="readerProgressBar"></div></div><div id="storyShare" hidden style="margin:14px 0"><label for="storyLink">Өгүүллэгийн холбоос</label><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px"><input id="storyLink" readonly style="flex:1;min-width:0;padding:10px;border:1px solid #ddd;border-radius:8px"><button type="button" class="read" id="copyStoryLink">Линк хуулах</button><a class="read" id="storyFacebook" target="_blank" rel="noopener noreferrer">Facebook-д хуваалцах</a></div></div><div class="modal-text" id="readerText"></div></div></div>
 <script>
 document.getElementById('year').textContent=new Date().getFullYear();
 const $=id=>document.getElementById(id);
@@ -251,8 +251,14 @@ function renderStories(filter='all'){
   $('empty').style.display=shown?'none':'block';
 }
 
-async function openStory(slug){
+const baseTitle=document.title;
+function storyUrl(slug){const u=new URL('/',location.origin);u.searchParams.set('story',slug);return u.href}
+function urlSlug(){return new URL(location.href).searchParams.get('story')||''}
+async function openStory(slug, syncUrl=true){
+  if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))return;
+  if(syncUrl && urlSlug()!==slug)history.pushState(null,'',storyUrl(slug));
   activeSlug=slug;
+  $('storyShare').hidden=true;
   $('readerTitle').textContent='Уншиж байна…';
   $('readerText').textContent='';
   modal.classList.add('open');
@@ -265,7 +271,12 @@ async function openStory(slug){
     const d=await api('/api/stories/'+encodeURIComponent(slug));
     const s=d.story;
 
+    if(activeSlug!==slug)return;
     $('readerTitle').textContent=s.title;
+    document.title=s.title+' | Тайгын Түүх';
+    $('storyShare').hidden=false;
+    $('storyLink').value=storyUrl(slug);
+    $('storyFacebook').href='https://www.facebook.com/sharer/sharer.php?u='+encodeURIComponent(storyUrl(slug));
     $('readerText').textContent=s.preview_text;
 
     const note=document.createElement('p');
@@ -436,10 +447,15 @@ async function loadStories(){
   }
 }
 
-function closeModal(){
+function closeModal(syncUrl=true){
   modal.classList.remove('open');
   document.body.style.overflow='';
+  activeSlug='';
+  document.title=baseTitle;
+  if(syncUrl && urlSlug()){const u=new URL(location.href);u.searchParams.delete('story');history.replaceState(null,'',u)}
 }
+$('copyStoryLink').onclick=async()=>{const input=$('storyLink');try{await navigator.clipboard.writeText(input.value);$('copyStoryLink').textContent='Хууллаа';setTimeout(()=>$('copyStoryLink').textContent='Линк хуулах',1800)}catch{input.focus();input.select();}};
+window.addEventListener('popstate',()=>{const slug=urlSlug();if(slug)openStory(slug,false);else closeModal(false)});
 
 $('closeReader').addEventListener('click',closeModal);
 
@@ -453,6 +469,7 @@ document.addEventListener('keydown',e=>{
 
 loadStories();
 updateAuth();
+if(urlSlug())openStory(urlSlug(),false);
 (function(){
 const questions=[["Чөлөөт цагаараа юу хийх дуртай вэ?","Бодлоо цэгцлэх","Таавар бодох","Дотнын хүмүүстэй уулзах","Шинэ газар төсөөлөх","Шинэ чадвар сурах","Өнгөрсөн үеийг судлах"],["Ямар түүх таныг татдаг вэ?","Хүний дотоод тэмцэл","Тайлагдаагүй хэрэг","Мартагдашгүй хайр","Домгийн ертөнц","Амжилтад хүрсэн замнал","Бодит түүхэн үйл явдал"],["Гол дүр ямар байвал сонирхолтой вэ?","Өөрийгөө хайж буй","Ажигч, овсгоотой","Үнэнч, мэдрэмжтэй","Ер бусын чадвартай","Зорилготой, тууштай","Түүхийг өөрчилсөн хүн"],["Номоос юу авахыг хүсдэг вэ?","Шинэ өнцөг","Гэнэтийн тайлал","Сэтгэл хөдөлгөм мэдрэмж","Төсөөллийн аялал","Хэрэгжүүлэх санаа","Түүхэн мэдлэг"],["Ямар орчин танд таалагддаг вэ?","Нам гүм өрөө","Нууцлаг хот","Дулаахан гэр","Манантай уулс","Шинэ боломжтой хот","Эртний улс гүрэн"],["Асуудал тулгарахад та яах дуртай вэ?","Эргэцүүлнэ","Баримт цуглуулна","Хүнтэй ярилцана","Шинэ хувилбар төсөөлнө","Төлөвлөгөө гаргана","Өмнөх туршлагаас суралцана"],["Ямар төгсгөл танд үлддэг вэ?","Бодол төрүүлсэн","Гэнэтийн","Сэтгэл уяраасан","Гайхамшигтай","Урам өгсөн","Бодит явдлын учрыг тайлсан"],["Ямар асуулт илүү сонирхолтой вэ?","Амьдралын утга юу вэ?","Хэн, яагаад хийсэн бэ?","Хүмүүс яагаад хайрладаг вэ?","Өөр ертөнц байвал яах вэ?","Яаж ахих вэ?","Өмнө нь юу болсон бэ?"],["Ямар номын хавтас сонгох вэ?","Энгийн бэлгэдэл","Сүүдэртэй дүрс","Хосын дүр","Домгийн уулс","Зорилго, зам","Эртний газрын зураг"],["Унших үед юу чухал вэ?","Гүн утга","Хурц өрнөл","Дүрүүдийн харилцаа","Шинэ ертөнц","Практик мэдлэг","Баримт, цаг үе"],["Найздаа ямар ном санал болгох вэ?","Эргэцүүлэлтэй","Сонирхолтой нууцтай","Сэтгэл хөдөлгөсөн","Адал явдалтай","Хэрэгтэй зөвлөгөөтэй","Түүхэн баримттай"],["Өнөөдөр ямар аялал хийхийг хүсэж байна вэ?","Өөрийн дотоод ертөнцөөр","Нууцын мөрөөр","Хайрын түүхээр","Домгийн нутгаар","Ирээдүйн зорилгын зүг","Өнгөрсөн цаг руу"]],types=[["Гүн бодолтон","Философи, сэтгэл зүй, драма","Та гүн утга, хүний дотоод ертөнцийг сонирхох хандлагатай.","drama"],["Нууцыг эрэлхийлэгч","Детектив, триллер, нууц","Та таавар, гэнэтийн эргэлттэй үйл явдлыг сонирхдог.","mystery"],["Зүрх сэтгэлээрээ уншигч","Хайр дурлал, роман","Та дүрүүдийн мэдрэмж, харилцаанд төвлөрсөн түүхийг сонирхдог.","romance"],["Төсөөллийн аялагч","Уран зөгнөл, домог, адал явдал","Та шинэ ертөнц, домог, ер бусын үйл явдлыг сонирхдог.","fantasy"],["Зорилготой тэмүүлэгч","Бизнес, хувь хүний хөгжил","Та хэрэгжүүлж болох санаа, өсөлт хөгжлийн тухай номыг сонирхдог.","growth"],["Өнгөрснийг судлагч","Түүх, намтар","Та өнгөрсөн цаг, бодит хүмүүсийн замналыг сонирхдог.","history"]];
 const root=document.getElementById('rqContent');if(!root)return;
