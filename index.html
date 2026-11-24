@@ -69,7 +69,7 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
   <section class="hero"><div class="wrap hero-grid"><div><div class="eyebrow">Унших дуртай хүмүүст зориулав</div><h1>Түүх бүрийн цаана нэгэн ертөнц бий.</h1><p>Тайгын нам гүмээс хотын гэрэл хүртэл — сэтгэл хөдөлгөх роман, богино өгүүллэг, мартагдашгүй дүрүүдтэй танилцаарай.</p><div class="reading-benefit" aria-label="Худалдан авах нөхцөл"><div class="reading-benefit-head"><span class="reading-benefit-icon" aria-hidden="true">✧</span><div><strong>Бүртгэлгүйгээр ч уншаарай</strong><span>Өгүүллэгээ сонгоод, төлбөрөө баталгаажуулмагц <b>48 цаг</b> чөлөөтэй унших эрх нээгдэнэ.</span></div></div><div class="reading-benefit-note">Зочин эрх энэ хөтөч дээр хадгалагдана. Хөтчийн өгөгдлийг устгавал унших эрхээ алдаж болзошгүй.</div></div><div class="actions"><a class="btn" href="#stories">Зохиолууд үзэх&nbsp; ↗</a><a class="btn secondary" href="/classics.html">Үнэгүй сонгодог унших</a></div></div><div class="hero-art" aria-hidden="true"><div class="hero-orbit"></div><div class="featured-book featured-book-back"><span>Түүхийн сан</span><strong>Өнгөрсөн цагийн<br>дуу хоолой</strong><i>✦</i></div><div class="featured-book featured-book-front"><span>ТАЙГЫН ТҮҮХ</span><div class="book-symbol">✧</div><strong>Үг бүрээс<br>эхлэх аялал</strong><small>Унших ертөнцдөө тавтай морил</small></div><div class="floating-note">✦ Өдөр бүр шинэ ертөнц</div></div></div></section>
   <section class="discovery-section" aria-label="Унших хэсгүүд"><div class="wrap discovery-grid"><a class="discovery-tile" href="#stories"><span class="discovery-icon">✧</span><span><strong>Өгүүллэгийн сан</strong><small>Төрөл бүрийн зохиолтой танилцах</small></span><span class="discovery-arrow">↗</span></a><a class="discovery-tile" href="/classics.html"><span class="discovery-icon">❦</span><span><strong>Үнэгүй сонгодог</strong><small>Сургамжит үлгэрүүдийг унших</small></span><span class="discovery-arrow">↗</span></a><a class="discovery-tile" href="/mongolian-history.html"><span class="discovery-icon">⌘</span><span><strong>Монголын түүх</strong><small>Өнгөрснөөс өнөөдөр хүртэл</small></span><span class="discovery-arrow">↗</span></a></div></section>
   <section class="section" id="stories"><div class="wrap"><div class="section-head"><div><div class="eyebrow">Унших булан</div><h2>Өөрийн дараагийн түүхээ олоорой</h2></div><p>Ангиллаа сонгоод, сонирхсон зохиолоо нээгээрэй.</p></div>
-    <div class="filters" aria-label="Зохиолын ангилал"><button class="filter active" data-filter="all">Бүгд</button><button class="filter" data-filter="romance">Хайр дурлал</button><button class="filter" data-filter="mystery">Нууц, адал явдал</button><button class="filter" data-filter="drama">Драма</button><button class="filter" data-filter="fantasy">Уран зөгнөл</button></div>
+    <div class="filters" aria-label="Зохиолын ангилал"><button class="filter active" data-filter="all">Бүгд</button><button class="filter" data-filter="romance">Хайр дурлал</button><button class="filter" data-filter="mystery">Нууц, адал явдал</button><button class="filter" data-filter="drama">Драма</button><button class="filter" data-filter="fantasy">Уран зөгнөл</button><button class="filter" data-filter="erotic">Эротик өгүүллэг · 18+</button></div>
     <div class="cards" id="cards">
       <article class="card" data-category="mystery"><div class="cover"><span class="symbol">☾</span><span class="genre">Нууц · Адал явдал</span></div><div class="card-body"><h3>Тайгын шивнээ</h3><p>Ойн гүнд мартагдсан нэгэн захидал хуучин нууцыг дахин амилуулна.</p><div class="meta"><span>Богино өгүүллэг</span><button class="read" data-story="taiga">Унших →</button></div></div></article>
       <article class="card" data-category="romance"><div class="cover amber"><span class="symbol">❧</span><span class="genre">Хайр дурлал</span></div><div class="card-body"><h3>Намрын сүүлчийн захиа</h3><p>Хэлж амжаагүй үгс, илгээгээгүй захиа хоёрын хооронд үлдсэн хайр.</p><div class="meta"><span>Роман · Эхлэл</span><button class="read" data-story="letter">Унших →</button></div></div></article>
@@ -177,6 +177,7 @@ async function api(url,method='GET',data){
 
 function categoryFor(s){
   const t=(s.title+' '+s.synopsis).toLowerCase();
+  if(/эротик|erotic|18\s*\+/.test(t))return 'erotic';
   if(/хайр|захиа|дурлал|романтик/.test(t))return 'romance';
   if(/сар|ид шид|уран зөгнөл|ертөнц/.test(t))return 'fantasy';
   if(/нууц|мөрд|адал явдал|тайга/.test(t))return 'mystery';
@@ -198,7 +199,7 @@ function renderStories(filter='all'){
     article.dataset.category=cat;
 
     const cover=document.createElement('div');
-    cover.className='cover '+({romance:'rose',fantasy:'blue',mystery:'moss',drama:'plum'}[cat]);
+    cover.className='cover '+({romance:'rose',fantasy:'blue',mystery:'moss',drama:'plum',erotic:'plum'}[cat]);
 
     const fallbackCover = /мөнх\s*тэнгэрийн\s*онгод/i.test(s.title || '') || s.slug === 'monkh-tengeriin-ongod' ? '/images/monkh-tengeriin-ongod.webp' : (/сүүлчийн\s*цас/i.test(s.title || '') || cat === 'romance') ? '/images/love-story.webp' : '';
     const coverUrl = String(s.cover_url || '').trim() || fallbackCover;
@@ -215,7 +216,7 @@ function renderStories(filter='all'){
 
     const genre=document.createElement('span');
     genre.className='genre';
-    genre.textContent=cat==='romance'?'Хайр дурлал':cat==='fantasy'?'Уран зөгнөл':cat==='mystery'?'Нууц · Адал явдал':'Өгүүллэг';
+    genre.textContent=cat==='erotic'?'Эротик өгүүллэг · 18+':cat==='romance'?'Хайр дурлал':cat==='fantasy'?'Уран зөгнөл':cat==='mystery'?'Нууц · Адал явдал':'Өгүүллэг';
     if(!coverUrl)cover.append(symbol);
     cover.append(genre);
 
