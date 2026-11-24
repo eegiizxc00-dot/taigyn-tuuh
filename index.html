@@ -370,7 +370,7 @@ async function buyStory(slug){
       ['Данс','470005005622631514','470005005622631514'],
       ['Данс эзэмшигч',d.accountName||'NERGUI ENKHBAT'],
       ['Төлөх дүн',Number(d.amount).toLocaleString('mn-MN')+'₮',String(d.amount)],
-      ['Захиалгын дугаар',d.orderId,d.orderId]
+      ['Гүйлгээний утга',d.orderId,d.orderId]
     ];
     for(const [label,value,copyValue] of rows){
       const line=document.createElement('div');line.className='payment-row';
