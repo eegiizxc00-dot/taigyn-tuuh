@@ -34,6 +34,20 @@
     .account-actions button{min-height:40px}
     .account-actions .signedin{max-width:100%}
   }
+
+/* Mobile-first navigation and full-screen story reading */
+.reader-controls{display:flex;align-items:center;gap:8px;flex-shrink:0}.reader-controls button{min-width:40px;min-height:42px;border-radius:8px;border:1px solid #dbd5c7;background:#f3eee2;color:#233629;font-weight:700;cursor:pointer}.reader-controls .close{font-size:24px;background:#eee4d1}.reader-progress{height:3px;background:#e8e1d4;border-radius:8px;overflow:hidden;margin:12px 0 20px}.reader-progress>div{height:100%;width:0;background:#b68a42;transition:width .15s ease}.modal-text{font-size:17px;line-height:1.95;overflow-wrap:anywhere}.modal-top{background:var(--paper);position:sticky;top:-28px;z-index:2;padding:12px 0 6px}.modal:focus-visible,.modal-box:focus-visible{outline:none}
+@media(max-width:760px){
+ header{padding:12px 0}.nav{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center}.brand{font-size:17px;gap:7px;white-space:nowrap;flex-shrink:1;min-width:0}.brand .mark{width:32px;height:32px;font-size:18px;flex-shrink:0}
+ .account-actions{order:1;display:flex;width:auto;flex:0 0 auto;margin-left:auto;gap:5px;justify-content:flex-end}.account-actions #navRegister{display:none}.account-actions button{padding:8px 9px;min-height:38px;font-size:12px}.account-actions .signedin{display:none}
+ .mobile-menu-toggle{order:2;display:inline-flex;margin-left:0;flex:0 0 auto;padding:7px 9px;min-height:38px;font-size:12px;gap:6px}
+ .navlinks{order:3;flex-basis:100%;width:100%;margin-top:4px}
+ #reader{padding:0;align-items:stretch;justify-content:stretch;background:var(--paper)}#reader .modal-box{max-width:none;width:100%;height:100vh;height:100dvh;max-height:none;border-radius:0;padding:18px 19px 42px;overscroll-behavior:contain;scrollbar-gutter:stable}
+ #reader .modal-top{top:-18px;align-items:center;padding:12px 0 10px;border-bottom:1px solid var(--line);margin-bottom:12px}#reader .modal-top h2{font-size:21px;line-height:1.35}#reader .eyebrow{font-size:10px}#reader .modal-text{font-size:18px;line-height:2}#reader .reader-controls button{min-width:38px;min-height:42px}#reader .reader-progress{margin:0 0 18px}
+ .auth-form input{font-size:16px}
+}
+@media(max-width:360px){.nav{gap:5px}.brand{font-size:15px;gap:5px}.brand .mark{height:29px;width:29px}.account-actions button{padding:7px 6px;font-size:11px}.mobile-menu-toggle{padding:7px}.mobile-menu-toggle span:first-child{font-size:18px}#reader .modal-box{padding-left:14px;padding-right:14px}#reader .reader-controls{gap:4px}#reader .reader-controls button{min-width:35px}}
+@media(prefers-reduced-motion:reduce){.reader-progress>div{transition:none}}
 </style>
 </head>
 <body>
@@ -56,11 +70,17 @@
 </main>
 <footer><div class="wrap foot"><span>© <span id="year"></span> Тайгын Түүх. Бүх эрх хуулиар хамгаалагдана.</span><span>Монгол хэлээрх түүх, роман, өгүүллэг.</span></div></footer>
 <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authTitle"><div class="modal-box" style="max-width:440px"><div class="modal-top"><h2 id="authTitle">Нэвтрэх</h2><button class="close" id="closeAuth" type="button" aria-label="Хаах">×</button></div><p class="auth-note">Бүртгэлгүйгээр өгүүллэг худалдан авах боломжтой. Бүртгүүлбэл өөрийн бүртгэлээрээ нэвтэрч болно.</p><form class="auth-form" id="authForm"><div><label for="authEmail">Имэйл</label><input id="authEmail" type="email" required autocomplete="email"></div><div><label for="authPassword">Нууц үг</label><input id="authPassword" type="password" required autocomplete="current-password"><p id="passwordHint" class="auth-note" hidden>Анхааруулга: Нууц үг хамгийн багадаа 7 тэмдэгттэй байна. Аюулгүй байдлаа хамгаалахын тулд урт, таахад хэцүү нууц үг сонгоорой.</p></div><p id="authStatus" class="auth-status" role="status"></p><div class="auth-footer"><button id="authSubmit" type="submit" class="btn">Нэвтрэх</button><button type="button" id="authSwitch" class="read">Бүртгэл үүсгэх</button></div></form></div></div>
-<div class="modal" id="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle"><div class="modal-box"><div class="modal-top"><div><div class="eyebrow">Тайгын Түүх · Унших булан</div><h2 id="readerTitle">Зохиолын нэр</h2></div><button class="close" id="closeReader" aria-label="Хаах">×</button></div><div class="modal-text" id="readerText"></div><p class="note">Энэ бол загварын жишээ текст. Өөрийн зохиолын эхээр сольж ашиглана уу.</p></div></div>
+<div class="modal" id="reader" role="dialog" aria-modal="true" aria-labelledby="readerTitle"><div class="modal-box" id="readerBox" tabindex="-1"><div class="modal-top"><div><div class="eyebrow">Тайгын Түүх · Унших булан</div><h2 id="readerTitle">Зохиолын нэр</h2></div><div class="reader-controls" aria-label="Унших тохиргоо"><button id="fontSmaller" type="button" aria-label="Үсгийн хэмжээг багасгах">A−</button><button id="fontLarger" type="button" aria-label="Үсгийн хэмжээг томруулах">A+</button><button class="close" id="closeReader" type="button" aria-label="Унших цонхыг хаах">×</button></div></div><div class="reader-progress" aria-hidden="true"><div id="readerProgressBar"></div></div><div class="modal-text" id="readerText"></div></div></div>
 <script>
 document.getElementById('year').textContent=new Date().getFullYear();
 const $=id=>document.getElementById(id);
 const modal=$('reader');
+const readerBox=$('readerBox');
+let readerFontSize=18;
+function updateReaderProgress(){if(!modal.classList.contains('open'))return;const remaining=readerBox.scrollHeight-readerBox.clientHeight;const percent=remaining>0?Math.min(100,Math.max(0,readerBox.scrollTop/remaining*100)):100;$('readerProgressBar').style.width=percent+'%'}
+readerBox.addEventListener('scroll',updateReaderProgress,{passive:true});
+$('fontSmaller').addEventListener('click',()=>{readerFontSize=Math.max(15,readerFontSize-1);$('readerText').style.fontSize=readerFontSize+'px';updateReaderProgress()});
+$('fontLarger').addEventListener('click',()=>{readerFontSize=Math.min(25,readerFontSize+1);$('readerText').style.fontSize=readerFontSize+'px';updateReaderProgress()});
 const mobileMenuToggle=$('mobileMenuToggle');
 const mobileSiteNav=$('mobileSiteNav');
 function closeMobileMenu(){mobileSiteNav.classList.remove('mobile-open');mobileMenuToggle.setAttribute('aria-expanded','false');mobileMenuToggle.setAttribute('aria-label','Цэс нээх')}
@@ -215,8 +235,10 @@ async function openStory(slug){
   $('readerTitle').textContent='Уншиж байна…';
   $('readerText').textContent='';
   modal.classList.add('open');
+  readerBox.scrollTop=0;
   document.body.style.overflow='hidden';
   clearReaderActions();
+  requestAnimationFrame(updateReaderProgress);
 
   try{
     const d=await api('/api/stories/'+encodeURIComponent(slug));
@@ -232,12 +254,14 @@ async function openStory(slug){
       :'Үнэгүй эхлэл. Үргэлжлэлийг '+Number(s.price_mnt).toLocaleString('mn-MN')+'₮ төлж 48 цагийн хугацаатай нээнэ.';
 
     $('readerText').append(document.createElement('br'),document.createElement('br'));
+    requestAnimationFrame(updateReaderProgress);
 
     if(s.unlocked&&s.continuation){
       const rest=document.createElement('div');
       rest.textContent=s.continuation;
       rest.style.marginTop='20px';
       $('readerText').append(note,rest);
+      requestAnimationFrame(updateReaderProgress);
     }else{
       const actions=document.createElement('div');
       actions.id='readerActions';
@@ -250,6 +274,7 @@ async function openStory(slug){
 
       actions.append(buy);
       $('readerText').append(note,actions);
+      requestAnimationFrame(updateReaderProgress);
     }
   }catch(e){
     $('readerTitle').textContent='Алдаа';
