@@ -200,7 +200,7 @@ function renderStories(filter='all'){
     const cover=document.createElement('div');
     cover.className='cover '+({romance:'rose',fantasy:'blue',mystery:'moss',drama:'plum'}[cat]);
 
-    const fallbackCover = /мөнх\s*тэнгэрийн\s*онгод/i.test(s.title || '') || s.slug === 'monkh-tengeriin-ongod' ? '/images/monkh-tengeriin-ongod.webp' : cat === 'romance' ? '/images/love-story.webp' : '';
+    const fallbackCover = /мөнх\s*тэнгэрийн\s*онгод/i.test(s.title || '') || s.slug === 'monkh-tengeriin-ongod' ? '/images/monkh-tengeriin-ongod.webp' : (/сүүлчийн\s*цас/i.test(s.title || '') || cat === 'romance') ? '/images/love-story.webp' : '';
     const coverUrl = String(s.cover_url || '').trim() || fallbackCover;
     if(coverUrl){
       cover.classList.add('has-image');
