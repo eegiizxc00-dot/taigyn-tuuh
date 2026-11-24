@@ -181,9 +181,12 @@ async function api(url,method='GET',data){
 }
 
 function categoryFor(s){
+  const title=(s.title||'').trim().toLowerCase();
+  if(title==='мөнх тэнгэрийн онгод')return 'fantasy';
+  if(title==='сүүлчийн цас')return 'romance';
   const t=(s.title+' '+s.synopsis).toLowerCase();
   if(/эротик|erotic|18\s*\+/.test(t))return 'erotic';
-  if(/хайр|захиа|дурлал|романтик/.test(t))return 'romance';
+  if(/хайр(?!хан)|захиа|дурлал|романтик/.test(t))return 'romance';
   if(/сар|ид шид|уран зөгнөл|ертөнц/.test(t))return 'fantasy';
   if(/нууц|мөрд|адал явдал|тайга/.test(t))return 'mystery';
   return 'drama';
