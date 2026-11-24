@@ -1,7 +1,7 @@
 /* Khukh Bekh visual identity */
-:root{--forest:#10283d;--forest2:#1a3956;--gold:#d9bd86;--muted:#657486;--cream:#f6f4ef;--paper:#fffefa;--line:#e4e4e0}
+:root{--forest:#10283d;--forest2:#1a3956;--gold:#FFF0B5;--muted:#657486;--cream:#f6f4ef;--paper:#fffefa;--line:#e4e4e0}
 header,.top{background:#10283d!important}
-.brand{display:inline-flex;align-items:center;gap:10px;color:#f5dfb4!important}
+.brand{display:inline-flex;align-items:center;gap:10px;color:#FFF0B5!important}
 .brand .mark{border:0!important;background:none!important;width:44px;height:44px;flex:none}
 .brand-logo{width:44px;height:44px;display:inline-block;vertical-align:middle;object-fit:contain;flex:none}
 .hero{background:radial-gradient(ellipse at 85% 20%,#385c7c80,transparent 46%),linear-gradient(125deg,#10283d,#1a3956)!important}
@@ -14,3 +14,8 @@ header,.top{background:#10283d!important}
 .book-symbol .brand-logo{width:76px;height:76px}
 .top strong{display:flex;align-items:center;gap:10px}
 @media(max-width:600px){.brand-logo,.brand .mark{width:36px;height:36px}.brand{gap:7px}}
+
+/* Pale gold brand accents */
+header .brand,.hero .eyebrow,.featured-book-front>span{color:#FFF0B5!important}
+.hero .btn:not(.secondary),.account-actions .primary{background:#FFF0B5!important;color:#10283D!important;border-color:#FFF0B5!important}
+.hero .btn:not(.secondary):hover,.account-actions .primary:hover{background:#F1DFA0!important}
