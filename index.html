@@ -66,7 +66,7 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
 .reader-free-text{-webkit-user-select:text;user-select:text}.reader-paid-text{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #storyShare:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 </style>
-<link rel="icon" type="image/svg+xml" href="/images/khukh-bekh-logo.svg"><link rel="stylesheet" href="/brand.css?v=book-font-2"></head>
+<link rel="icon" type="image/svg+xml" href="/images/khukh-bekh-logo.svg"><link rel="stylesheet" href="/brand.css?v=book-scene-3"></head>
 <body>
 <header><div class="wrap nav"><a class="brand" href="#top"><span class="mark"><img class="brand-logo" src="/images/khukh-bekh-logo.svg" alt="" width="44" height="44"></span><span>Хөх бэх</span></a><button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-expanded="false" aria-controls="mobileSiteNav" aria-label="Цэс нээх"><span aria-hidden="true">☰</span><span>Цэс</span></button><nav class="navlinks" id="mobileSiteNav" aria-label="Үндсэн цэс"><a href="#stories">Зохиолууд</a><a href="#readerQuiz">Уншигчийн тест</a><a href="/classics.html">Үнэгүй сонгодог</a><a href="/mongolian-history.html">Монголын түүх</a><a href="#about">Бидний тухай</a><a href="#contact">Холбоо барих</a></nav><div class="account-actions"><span class="signedin" id="signedInEmail" hidden></span><button id="navLogin" type="button">Нэвтрэх</button><button id="navRegister" type="button" class="primary">Бүртгэл үүсгэх</button><button id="navLogout" type="button" hidden>Гарах</button></div></div></header>
 <main id="top">
@@ -319,6 +319,28 @@ const bookReader=(()=>{
   if(!pages.length)pages.push({part:'free',offset:0,text:''});
   index=Math.floor(restore(a)/cols)*cols;render();
  }
+
+ function sceneIcon(text){
+  const rules=[
+   [/аянга|цахил|тэнгэр дуугар|тэнгэр нүргэл/g,'Тэнгэр','M3 12Q2 7 7 7Q8 2 13 5Q17 3 19 8Q24 8 22 13H15M12 10L8 17H13L10 23'],
+   [/илд|тулаан|зэвсэг|дайчин/g,'Тулаан','M4 3L19 18M4 3L5 9L15 19M20 3L5 18M20 3L19 9L9 19M14 16L21 23M3 21L8 16M16 14L22 20M2 20L8 14'],
+   [/чоно|улилаа|улих/g,'Хөх чоно','M3 19L5 7L10 11L14 5L21 10L19 16L13 21L8 20Z M14 12L16 12M18 16L21 15'],
+   [/хаан ширээ|их хаан|өргөө|хааных/g,'Төрийн сүлд','M12 3V22M6 22H18M5 5H19M6 5L4 15M9 5L8 16M15 5L16 16M18 5L20 15M9 3H15'],
+   [/гал|дөл|илч/g,'Гал','M12 2Q17 8 15 12Q20 10 20 17Q18 23 12 22Q4 22 4 16Q5 11 9 8Q8 13 12 14Q15 9 12 2Z'],
+   [/сахиус|тангараг|андгай|судар/g,'Тангараг','M6 3H18Q21 3 21 6Q21 9 18 9H16V19Q16 22 13 22H4Q1 22 1 19Q1 16 4 16H6ZM8 8H14M8 12H14M4 16H13'],
+   [/нутаг|хайрхан|уулс|тал нутаг/g,'Эх нутаг','M2 20L9 7L13 13L17 4L23 20ZM6 12L9 14L11 11M14 10L17 12L19 9'],
+   [/хагац|нулимс|гашууд|нас бар/g,'Хагацал','M12 3Q5 12 5 16A7 7 0 0 0 19 16Q19 12 12 3ZM8 17Q9 20 12 20'],
+   [/хайр дурлал|үнс|хайрт|зүрх/g,'Сэтгэл','M12 21L3 12Q-1 5 6 4Q10 3 12 8Q15 3 19 4Q25 6 21 12Z'],
+   [/сарны|манан|нууцлаг|шөнө/g,'Нууцлаг учрал','M16 2A10 10 0 1 0 22 17A9 9 0 0 1 16 2ZM5 4V8M3 6H7M19 5V9M17 7H21']
+  ];
+  const lower=String(text||'').toLowerCase();let best=null,score=0;
+  for(const [re,label,path] of rules){const n=(lower.match(re)||[]).length;if(n>score){score=n;best={label,path}}}
+  if(!best)return null;
+  const wrap=element('span','bk-scene-icon');wrap.setAttribute('aria-hidden','true');wrap.title=best.label;
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg');svg.setAttribute('viewBox','0 0 24 24');svg.setAttribute('fill','none');svg.setAttribute('stroke','currentColor');svg.setAttribute('stroke-width','1.1');svg.setAttribute('stroke-linecap','round');svg.setAttribute('stroke-linejoin','round');
+  const path=document.createElementNS('http://www.w3.org/2000/svg','path');path.setAttribute('d',best.path);svg.append(path);wrap.append(svg);return wrap;
+ }
+
  function render(){
   if(!story)return;spread.replaceChildren();
   for(let i=0;i<cols;i++){
@@ -329,7 +351,9 @@ const bookReader=(()=>{
     body.classList.add('bk-lock');body.append(element('div','bk-lock-icon','♙'),element('h3','','Үргэлжлэл түгжээтэй'),element('p','','48 цагийн унших эрх'));
     const buy=element('button','btn','Үргэлжлэлийг нээх · '+Number(story.price_mnt).toLocaleString('mn-MN')+'₮');buy.type='button';buy.onclick=()=>buyStory(story.slug);body.append(buy);
    }else{body.textContent=p.text;if(p.part==='paid')body.classList.add('reader-paid-text')}
-   page.append(top,body,element('div','bk-folio','— '+(index+i+1)+' —'));spread.append(page);
+   const folio=element('div','bk-folio','— '+(index+i+1)+' —');
+   if(p.part!=='lock'){const ornament=sceneIcon(p.text);if(ornament)top.append(ornament)}
+   page.append(top,body,folio);spread.append(page);
   }
   q('.bk-count').textContent=(index+1)+(cols===2&&index+1<pages.length?'–'+(index+2):'')+' / '+pages.length;
   q('.bk-prev').disabled=index===0;q('.bk-next').disabled=index+cols>=pages.length;

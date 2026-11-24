@@ -76,3 +76,9 @@ header .brand,.hero .eyebrow,.featured-book-front>span{color:#FFF0B5!important}
 .bk-running,.bk-folio{font-family:"Times New Roman",Times,serif}
 .bk-probe .bk-copy{height:100%;min-height:0}
 #readerText{font-family:"Times New Roman",Times,"Liberation Serif",serif}
+
+/* Context-sensitive miniature book engravings; do not change pagination height. */
+.bk-running{position:relative;padding-inline:29px;line-height:25px}
+.bk-scene-icon{position:absolute;right:2px;top:1px;width:24px;height:24px;color:#927342;opacity:.88;display:grid;place-items:center;pointer-events:none}
+.bk-scene-icon svg{width:21px;height:21px;display:block}
+@media(max-width:760px){.bk-scene-icon{width:22px;height:22px}.bk-scene-icon svg{width:19px;height:19px}}
