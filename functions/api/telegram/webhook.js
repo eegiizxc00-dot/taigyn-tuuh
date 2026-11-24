@@ -91,20 +91,20 @@ export async function onRequestPost({ request, env }) {
         "Сайн байна уу!\n\n" +
         "Тайгын Түүх төлбөрийн удирдлагын бот ажиллаж байна.\n\n" +
         "Төлбөр баталгаажуулах команд:\n" +
-        "/paid ORDER_ID"
+        "/paid ORDER_ID эсвэл /paid 6_ТЭМДЭГТ"
       );
 
       return json({ ok: true });
     }
 
-    // 5. /paid ORDER_ID команд шалгах
+    // 5. /paid ORDER_ID эсвэл /paid 6_ТЭМДЭГТ команд шалгах
     const cleanText = text
       .replace(/[\u200B-\u200D\uFEFF]/g, "")
       .trim();
 
     const parts = cleanText.split(/\s+/);
     const command = (parts[0] || "").split("@")[0].toLowerCase();
-    const orderId = parts[1] || "";
+    let orderId = parts[1] || "";
 
     if (
       command !== "/paid" ||
@@ -117,7 +117,7 @@ export async function onRequestPost({ request, env }) {
           env,
           "Командын хэлбэр буруу байна.\n\n" +
           "Зөв хэлбэр:\n" +
-          "/paid ORDER_ID"
+          "/paid ORDER_ID эсвэл /paid 6_ТЭМДЭГТ"
         );
       }
 
@@ -127,6 +127,18 @@ export async function onRequestPost({ request, env }) {
     // 6. D1 database шалгах
     if (!env.DB) {
       throw new Error("D1 database binding DB is missing");
+    }
+
+    // A short transfer reference is accepted only when unambiguous.
+    if (/^[a-f0-9]{6}$/i.test(orderId)) {
+      const {results=[]} = await env.DB.prepare(
+        "SELECT id FROM orders WHERE lower(substr(id,1,6)) = ? LIMIT 2"
+      ).bind(orderId.toLowerCase()).all();
+      if (results.length !== 1) {
+        await sendTelegram(env, results.length ? "Гүйлгээний утга давхардсан байна. Бүтэн захиалгын ID ашиглана уу." : "Гүйлгээний утгаар захиалга олдсонгүй.");
+        return json({ok:true});
+      }
+      orderId = results[0].id;
     }
 
     const order = await env.DB.prepare(
