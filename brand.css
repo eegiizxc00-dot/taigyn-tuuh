@@ -1,0 +1,16 @@
+/* Khukh Bekh visual identity */
+:root{--forest:#10283d;--forest2:#1a3956;--gold:#d9bd86;--muted:#657486;--cream:#f6f4ef;--paper:#fffefa;--line:#e4e4e0}
+header,.top{background:#10283d!important}
+.brand{display:inline-flex;align-items:center;gap:10px;color:#f5dfb4!important}
+.brand .mark{border:0!important;background:none!important;width:44px;height:44px;flex:none}
+.brand-logo{width:44px;height:44px;display:inline-block;vertical-align:middle;object-fit:contain;flex:none}
+.hero{background:radial-gradient(ellipse at 85% 20%,#385c7c80,transparent 46%),linear-gradient(125deg,#10283d,#1a3956)!important}
+.newsletter,.featured-book-front{background:linear-gradient(135deg,#1c405f,#10283d)!important}
+.featured-book-back{background:linear-gradient(135deg,#476681,#203a53)!important}
+.filter.active,.read:not(.card .read),.top .btn:not(.alt):not(.danger){background:#214765;color:#fff}
+.card .read,.open,.discovery-icon{background:#e8eef4;color:#173d5a!important}
+.card .read:hover,.open:hover{background:#d7e4ee}
+.quote{background:linear-gradient(135deg,#e7edf4,#f2eadb)!important}
+.book-symbol .brand-logo{width:76px;height:76px}
+.top strong{display:flex;align-items:center;gap:10px}
+@media(max-width:600px){.brand-logo,.brand .mark{width:36px;height:36px}.brand{gap:7px}}
