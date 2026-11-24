@@ -144,6 +144,7 @@ export async function onRequestPost({ request, env }) {
       '📚 Тайгын Түүх — Шинэ захиалга\n\n' +
       `Зохиол: ${story.title}\n` +
       `Дүн: ${story.price_mnt}₮\n` +
+      `Гүйлгээний утга: ${orderId.slice(0,6)}\n` +
       `Захиалгын ID: ${orderId}\n\n` +
       `Баталгаажуулах команд:\n/paid ${orderId}`
     );
