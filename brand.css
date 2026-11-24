@@ -69,3 +69,10 @@ header .brand,.hero .eyebrow,.featured-book-front>span{color:#FFF0B5!important}
 @media(min-width:761px){#reader .modal-box.book-active{width:min(100%,1080px);max-width:1080px}}
 @media(max-width:760px){#reader .book-active{padding-left:9px;padding-right:9px}.bk-page{height:clamp(240px,calc(100dvh - 300px),620px);padding:10px 18px}.bk-toolbar,.bk-nav{gap:5px}.bk-toolbar button,.bk-nav button{padding:8px 10px}}
 @media(prefers-reduced-motion:reduce){.bk-page{animation:none!important}}
+
+/* Book pagination: measurement must match the rendered three-row page. */
+.bk-page{box-sizing:border-box;grid-template-rows:28px minmax(0,1fr) 24px}
+.bk-copy{font-family:"Times New Roman",Times,"Liberation Serif",serif;line-height:1.65;font-weight:400;letter-spacing:0;text-align:left}
+.bk-running,.bk-folio{font-family:"Times New Roman",Times,serif}
+.bk-probe .bk-copy{height:100%;min-height:0}
+#readerText{font-family:"Times New Roman",Times,"Liberation Serif",serif}

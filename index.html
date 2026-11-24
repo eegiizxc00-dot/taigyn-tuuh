@@ -66,7 +66,7 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
 .reader-free-text{-webkit-user-select:text;user-select:text}.reader-paid-text{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #storyShare:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 </style>
-<link rel="icon" type="image/svg+xml" href="/images/khukh-bekh-logo.svg"><link rel="stylesheet" href="/brand.css"></head>
+<link rel="icon" type="image/svg+xml" href="/images/khukh-bekh-logo.svg"><link rel="stylesheet" href="/brand.css?v=book-font-2"></head>
 <body>
 <header><div class="wrap nav"><a class="brand" href="#top"><span class="mark"><img class="brand-logo" src="/images/khukh-bekh-logo.svg" alt="" width="44" height="44"></span><span>Хөх бэх</span></a><button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-expanded="false" aria-controls="mobileSiteNav" aria-label="Цэс нээх"><span aria-hidden="true">☰</span><span>Цэс</span></button><nav class="navlinks" id="mobileSiteNav" aria-label="Үндсэн цэс"><a href="#stories">Зохиолууд</a><a href="#readerQuiz">Уншигчийн тест</a><a href="/classics.html">Үнэгүй сонгодог</a><a href="/mongolian-history.html">Монголын түүх</a><a href="#about">Бидний тухай</a><a href="#contact">Холбоо барих</a></nav><div class="account-actions"><span class="signedin" id="signedInEmail" hidden></span><button id="navLogin" type="button">Нэвтрэх</button><button id="navRegister" type="button" class="primary">Бүртгэл үүсгэх</button><button id="navLogout" type="button" hidden>Гарах</button></div></div></header>
 <main id="top">
@@ -290,7 +290,7 @@ const bookReader=(()=>{
  const key=()=> 'kb-book-position:'+story.slug;
  function anchor(){return pages[index]?{part:pages[index].part,offset:pages[index].offset}:null}
  function remember(){if(story&&anchor())write(key(),JSON.stringify(anchor()))}
- function restore(a){if(!a)return 0;let n=pages.findLastIndex(p=>p.part===a.part&&p.offset<=a.offset);if(n<0)n=pages.findIndex(p=>p.part==='lock');return Math.max(0,n)}
+ function restore(a){if(!a)return 0;let n=-1;for(let i=0;i<pages.length;i++){if(pages[i].part===a.part&&pages[i].offset<=a.offset)n=i;}if(n<0)n=pages.findIndex(p=>p.part==='lock');return Math.max(0,n)}
  function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
  function validPaid(){return story?.unlocked&&story.continuation&&(!story.expiresAt||Date.parse(story.expiresAt)>Date.now())}
  function paginate(a){
@@ -299,13 +299,15 @@ const bookReader=(()=>{
   cols=matchMedia('(min-width: 761px)').matches?2:1;
   spread.style.setProperty('--bk-cols',cols);
   spread.replaceChildren();
-  const probe=element('article','bk-page bk-probe'),inner=element('div','bk-copy');probe.append(inner);spread.append(probe);
-  const height=inner.clientHeight; if(!height){spread.replaceChildren();return}
+  const probe=element('article','bk-page bk-probe'),inner=element('div','bk-copy');
+  probe.append(element('div','bk-running',story.title),inner,element('div','bk-folio','— 1 —'));spread.append(probe);
+  const height=inner.clientHeight;
+  if(height<40){spread.replaceChildren();scroll=true;applyMode();return}
   pages=[];
   function split(text,part){
    text=String(text||'');let pos=0;
    while(pos<text.length){
-    let lo=1,hi=text.length-pos,best=1;
+    let lo=1,hi=Math.min(6000,text.length-pos),best=1;
     while(lo<=hi){let mid=(lo+hi)>>1;inner.textContent=text.slice(pos,pos+mid);if(inner.scrollHeight<=height+1){best=mid;lo=mid+1}else hi=mid-1}
     if(pos+best<text.length){const cut=text.slice(pos,pos+best).search(/\s+\S*$/);if(cut>best*.55)best=cut+1}
     if(best===1&&/[\uD800-\uDBFF]/.test(text[pos]))best=2;
