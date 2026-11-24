@@ -23,7 +23,7 @@ function response(data, status = 200, cookie = null) {
 }
 
 async function notifyAdmin(env, text) {
-  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) return;
+  if (!env.TELEGRAM_BOT_TOKEN || !env.TELEGRAM_CHAT_ID) throw new Error('Telegram configuration missing: TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID');
 
   const result = await fetch(
     `https://api.telegram.org/bot${env.TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -37,7 +37,8 @@ async function notifyAdmin(env, text) {
     }
   );
 
-  if (!result.ok) throw new Error('Telegram notification failed');
+  const payload = await result.json().catch(() => null);
+  if (!result.ok || !payload?.ok) throw new Error('Telegram notification failed: HTTP ' + result.status + ' ' + String(payload?.description || '').slice(0,200));
 }
 
 export async function onRequestPost({ request, env }) {
@@ -102,7 +103,7 @@ export async function onRequestPost({ request, env }) {
 
   // Өмнөх хүлээгдэж буй захиалгыг дахин ашиглана.
   const pending = await env.DB.prepare(
-    `SELECT id FROM orders
+    `SELECT id, amount_mnt FROM orders
      WHERE user_id = ?
        AND story_id = ?
        AND status = 'PENDING'
@@ -111,9 +112,13 @@ export async function onRequestPost({ request, env }) {
   ).bind(user.id, story.id).first();
 
   if (pending) {
+    try {
+      await notifyAdmin(env, '📚 Тайгын Түүх — Хүлээгдэж буй захиалга дахин нээгдлээ\n\n' +
+        `Зохиол: ${story.title}\nДүн: ${pending.amount_mnt}₮\nГүйлгээний утга: ${pending.id.slice(0,6)}\nЗахиалгын ID: ${pending.id}\n\nБаталгаажуулах команд:\n/paid ${pending.id}`);
+    } catch (error) { console.error('Telegram notification error:', error.message); }
     return response({
       orderId: pending.id,
-      amount: story.price_mnt,
+      amount: pending.amount_mnt,
       currency: 'MNT',
       bank: 'ХААН Банк',
       accountNumber: '5622631514',
