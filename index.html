@@ -60,6 +60,7 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
 @media(max-width:760px){header{padding:12px 0}.hero{padding:58px 0 89px}.hero-grid{grid-template-columns:1fr;gap:10px}.hero h1{font-size:clamp(39px,9.2vw,58px);letter-spacing:-1.4px;max-width:570px}.hero p{font-size:15px;line-height:1.85}.hero-art{height:305px;min-height:305px;transform:none}.hero-orbit{width:260px;height:260px}.featured-book{width:175px;height:250px;padding:18px}.featured-book-front{transform:rotate(-7deg) translate(0,12px)}.featured-book-back{transform:rotate(12deg) translate(48px,-12px)}.featured-book strong{font-size:18px}.featured-book-back strong{font-size:15px}.featured-book-back i{font-size:65px}.book-symbol{font-size:63px}.floating-note{bottom:-4px;right:4%;font-size:10px}.discovery-section{margin-top:-42px}.discovery-grid{grid-template-columns:1fr;gap:9px}.discovery-tile{padding:13px 16px}.discovery-icon{width:42px;height:42px;flex-basis:42px}.section{padding:60px 0}.cards{grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.cover{height:180px}.card-body{padding:17px}.card h3{font-size:19px}.card p{min-height:0}.newsletter{padding:28px;border-radius:18px}.newsletter h2{font-size:28px}.filters{flex-wrap:nowrap;overflow-x:auto;padding-bottom:10px;scrollbar-width:thin}.filter{white-space:nowrap;flex-shrink:0}.modal-top{border-bottom:1px solid #eee9dd}}
 @media(max-width:480px){.wrap{padding:0 17px}.hero{padding-top:49px}.hero-art{height:277px;min-height:277px}.hero h1{font-size:clamp(37px,10.5vw,48px)}.hero .actions .btn{width:100%}.reading-benefit{margin-top:19px}.section h2{font-size:29px}.cards{grid-template-columns:1fr}.cover{height:228px}.card-body{padding:19px}.card h3{font-size:22px}.meta{gap:8px}.quote{padding:51px 0}.quote blockquote{font-size:22px}.newsletter .btn{width:100%}}
 @media(prefers-reduced-motion:reduce){.card,.btn,.discovery-tile,.account-actions button{transition:none}}
+.cover.has-image:before,.cover.has-image:after{display:none}
 </style>
 </head>
 <body>
@@ -199,8 +200,11 @@ function renderStories(filter='all'){
     const cover=document.createElement('div');
     cover.className='cover '+({romance:'rose',fantasy:'blue',mystery:'moss',drama:'plum'}[cat]);
 
-    if(s.cover_url){
-      cover.style.backgroundImage=`linear-gradient(0deg,#15231d99,#15231d22),url("${String(s.cover_url).replace(/"/g,'%22')}")`;
+    const fallbackCover = /мөнх\s*тэнгэрийн\s*онгод/i.test(s.title || '') || s.slug === 'monkh-tengeriin-ongod' ? '/images/monkh-tengeriin-ongod.webp' : cat === 'romance' ? '/images/love-story.webp' : '';
+    const coverUrl = String(s.cover_url || '').trim() || fallbackCover;
+    if(coverUrl){
+      cover.classList.add('has-image');
+      cover.style.backgroundImage=`linear-gradient(0deg,#15231d99,#15231d22),url("${coverUrl.replace(/"/g,'%22')}")`;
       cover.style.backgroundSize='cover';
       cover.style.backgroundPosition='center';
     }
@@ -212,7 +216,8 @@ function renderStories(filter='all'){
     const genre=document.createElement('span');
     genre.className='genre';
     genre.textContent=cat==='romance'?'Хайр дурлал':cat==='fantasy'?'Уран зөгнөл':cat==='mystery'?'Нууц · Адал явдал':'Өгүүллэг';
-    cover.append(symbol,genre);
+    if(!coverUrl)cover.append(symbol);
+    cover.append(genre);
 
     const body=document.createElement('div');
     body.className='card-body';
