@@ -96,10 +96,10 @@ const $=id=>document.getElementById(id);
 const modal=$('reader');
 const readerBox=$('readerBox');
 let readerFontSize=18;
-function updateReaderProgress(){if(!modal.classList.contains('open'))return;const remaining=readerBox.scrollHeight-readerBox.clientHeight;const percent=remaining>0?Math.min(100,Math.max(0,readerBox.scrollTop/remaining*100)):100;$('readerProgressBar').style.width=percent+'%'}
+function updateReaderProgress(){if(!modal.classList.contains('open')||readerBox.classList.contains('book-active'))return;const remaining=readerBox.scrollHeight-readerBox.clientHeight;const percent=remaining>0?Math.min(100,Math.max(0,readerBox.scrollTop/remaining*100)):100;$('readerProgressBar').style.width=percent+'%'}
 readerBox.addEventListener('scroll',updateReaderProgress,{passive:true});
-$('fontSmaller').addEventListener('click',()=>{readerFontSize=Math.max(15,readerFontSize-1);$('readerText').style.fontSize=readerFontSize+'px';updateReaderProgress()});
-$('fontLarger').addEventListener('click',()=>{readerFontSize=Math.min(25,readerFontSize+1);$('readerText').style.fontSize=readerFontSize+'px';updateReaderProgress()});
+$('fontSmaller').addEventListener('click',()=>{readerFontSize=Math.max(15,readerFontSize-1);$('readerText').style.fontSize=readerFontSize+'px';readerBox.style.setProperty('--bk-font',readerFontSize+'px');updateReaderProgress()});
+$('fontLarger').addEventListener('click',()=>{readerFontSize=Math.min(25,readerFontSize+1);$('readerText').style.fontSize=readerFontSize+'px';readerBox.style.setProperty('--bk-font',readerFontSize+'px');updateReaderProgress()});
 const mobileMenuToggle=$('mobileMenuToggle');
 const mobileSiteNav=$('mobileSiteNav');
 function closeMobileMenu(){mobileSiteNav.classList.remove('mobile-open');mobileMenuToggle.setAttribute('aria-expanded','false');mobileMenuToggle.setAttribute('aria-label','Цэс нээх')}
@@ -273,9 +273,92 @@ $('readerText').addEventListener('copy',event=>{
     }
   }
 });
+
+/* Book reader. Only server-authorized story text enters this view. */
+const bookReader=(()=>{
+ const host=document.createElement('section');host.id='bookReader';host.hidden=true;
+ host.innerHTML='<div class="bk-toolbar"><button type="button" class="bk-mode">Гүйлгэж унших</button><button type="button" class="bk-sound" aria-pressed="false">Чимээ: унтраалттай</button></div><div class="bk-spread" aria-live="polite"></div><div class="bk-nav"><button type="button" class="bk-prev">← Өмнөх</button><span class="bk-count"></span><button type="button" class="bk-next">Дараах →</button></div>';
+ const original=$('readerText');original.before(host);
+ const q=s=>host.querySelector(s),spread=q('.bk-spread'),mode=q('.bk-mode'),sound=q('.bk-sound');
+ let story=null,pages=[],index=0,cols=1,scroll=false,muted=true,audio=null,timer,expiry,turnTimer,gesture=null,locked=false;
+ const read=(k,d)=>{try{return localStorage.getItem(k)??d}catch{return d}};
+ const write=(k,v)=>{try{localStorage.setItem(k,v)}catch{}};
+ muted=read('kb-book-sound','off')!=='on';
+ const soundLabel=()=>{sound.textContent='Чимээ: '+(muted?'унтраалттай':'асаалттай');sound.setAttribute('aria-pressed',String(!muted))};soundLabel();
+ sound.onclick=()=>{muted=!muted;write('kb-book-sound',muted?'off':'on');soundLabel();if(!muted)play()};
+ function play(){if(muted)return;try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;audio=audio||new C();audio.resume().catch(()=>{});const len=Math.floor(audio.sampleRate*.19),buf=audio.createBuffer(1,len,audio.sampleRate),data=buf.getChannelData(0);for(let i=0;i<len;i++)data[i]=(Math.random()*2-1)*Math.sin(Math.PI*i/len)**2;const src=audio.createBufferSource(),filter=audio.createBiquadFilter(),gain=audio.createGain();src.buffer=buf;filter.type='lowpass';filter.frequency.value=1900;gain.gain.value=.055;src.connect(filter).connect(gain).connect(audio.destination);src.start()}catch{}}
+ const key=()=> 'kb-book-position:'+story.slug;
+ function anchor(){return pages[index]?{part:pages[index].part,offset:pages[index].offset}:null}
+ function remember(){if(story&&anchor())write(key(),JSON.stringify(anchor()))}
+ function restore(a){if(!a)return 0;let n=pages.findLastIndex(p=>p.part===a.part&&p.offset<=a.offset);if(n<0)n=pages.findIndex(p=>p.part==='lock');return Math.max(0,n)}
+ function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
+ function validPaid(){return story?.unlocked&&story.continuation&&(!story.expiresAt||Date.parse(story.expiresAt)>Date.now())}
+ function paginate(a){
+  if(!story||scroll||host.hidden)return;
+  clearTimeout(turnTimer);locked=false;spread.classList.remove('bk-turn-next','bk-turn-prev');
+  cols=matchMedia('(min-width: 761px)').matches?2:1;
+  spread.style.setProperty('--bk-cols',cols);
+  spread.replaceChildren();
+  const probe=element('article','bk-page bk-probe'),inner=element('div','bk-copy');probe.append(inner);spread.append(probe);
+  const height=inner.clientHeight; if(!height){spread.replaceChildren();return}
+  pages=[];
+  function split(text,part){
+   text=String(text||'');let pos=0;
+   while(pos<text.length){
+    let lo=1,hi=text.length-pos,best=1;
+    while(lo<=hi){let mid=(lo+hi)>>1;inner.textContent=text.slice(pos,pos+mid);if(inner.scrollHeight<=height+1){best=mid;lo=mid+1}else hi=mid-1}
+    if(pos+best<text.length){const cut=text.slice(pos,pos+best).search(/\s+\S*$/);if(cut>best*.55)best=cut+1}
+    if(best===1&&/[\uD800-\uDBFF]/.test(text[pos]))best=2;
+    pages.push({part,offset:pos,text:text.slice(pos,pos+best).trimEnd()});pos+=best;
+   }
+  }
+  split(story.preview_text,'free');
+  if(validPaid())split(story.continuation,'paid');else pages.push({part:'lock',offset:0});
+  if(!pages.length)pages.push({part:'free',offset:0,text:''});
+  index=Math.floor(restore(a)/cols)*cols;render();
+ }
+ function render(){
+  if(!story)return;spread.replaceChildren();
+  for(let i=0;i<cols;i++){
+   const p=pages[index+i],page=element('article','bk-page');
+   if(!p){page.classList.add('bk-blank');spread.append(page);continue}
+   const top=element('div','bk-running',story.title),body=element('div','bk-copy');
+   if(p.part==='lock'){
+    body.classList.add('bk-lock');body.append(element('div','bk-lock-icon','♙'),element('h3','','Үргэлжлэл түгжээтэй'),element('p','','48 цагийн унших эрх'));
+    const buy=element('button','btn','Үргэлжлэлийг нээх · '+Number(story.price_mnt).toLocaleString('mn-MN')+'₮');buy.type='button';buy.onclick=()=>buyStory(story.slug);body.append(buy);
+   }else{body.textContent=p.text;if(p.part==='paid')body.classList.add('reader-paid-text')}
+   page.append(top,body,element('div','bk-folio','— '+(index+i+1)+' —'));spread.append(page);
+  }
+  q('.bk-count').textContent=(index+1)+(cols===2&&index+1<pages.length?'–'+(index+2):'')+' / '+pages.length;
+  q('.bk-prev').disabled=index===0;q('.bk-next').disabled=index+cols>=pages.length;
+  $('readerProgressBar').style.width=Math.min(100,(index+cols)/pages.length*100)+'%';remember();
+ }
+ function turn(dir){
+  if(!story||scroll||locked||index+dir*cols<0||index+dir*cols>=pages.length)return;
+  if(story.unlocked&&!validPaid()){openStory(story.slug,false);return}
+  locked=true;play();const cls=dir>0?'bk-turn-next':'bk-turn-prev';spread.classList.add(cls);
+  const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  turnTimer=setTimeout(()=>{index+=dir*cols;spread.classList.remove(cls);render();locked=false},reduced?0:240);
+ }
+ q('.bk-prev').onclick=()=>turn(-1);q('.bk-next').onclick=()=>turn(1);
+ spread.addEventListener('touchstart',e=>{const t=e.changedTouches[0];gesture={x:t.clientX,y:t.clientY}},{passive:true});
+ spread.addEventListener('touchend',e=>{if(!gesture)return;const t=e.changedTouches[0],dx=t.clientX-gesture.x,dy=t.clientY-gesture.y;gesture=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.5)turn(dx<0?1:-1)},{passive:true});
+ host.addEventListener('copy',e=>{const sel=getSelection();if(sel&&!sel.isCollapsed&&[...host.querySelectorAll('.reader-paid-text')].some(p=>{for(let i=0;i<sel.rangeCount;i++)if(sel.getRangeAt(i).intersectsNode(p))return true;return false}))e.preventDefault()});
+ mode.onclick=()=>{if(!story)return;remember();scroll=!scroll;write('kb-book-mode',scroll?'scroll':'book');applyMode()};
+ function applyMode(){host.classList.toggle('bk-scroll',scroll);original.hidden=!scroll;readerBox.classList.toggle('book-active',!scroll);mode.textContent=scroll?'Номын горим':'Гүйлгэж унших';if(!scroll){let a;try{a=JSON.parse(read(key(),'null'))}catch{}paginate(a)}else updateReaderProgress()}
+ function reset(){clearTimeout(timer);clearTimeout(expiry);clearTimeout(turnTimer);locked=false;story=null;pages=[];host.hidden=true;original.hidden=false;readerBox.classList.remove('book-active');spread.replaceChildren()}
+ function start(s){reset();story=s;host.hidden=false;scroll=read('kb-book-mode','book')==='scroll';applyMode();if(s.unlocked&&s.expiresAt){const ms=Date.parse(s.expiresAt)-Date.now();expiry=setTimeout(()=>{if(story===s&&activeSlug===s.slug&&modal.classList.contains('open'))openStory(s.slug,false)},Math.max(0,Math.min(ms+100,2147483647)))}}
+ function resize(){clearTimeout(timer);timer=setTimeout(()=>{if(story&&!scroll&&!host.hidden&&modal.classList.contains('open'))paginate(anchor())},100)}
+ window.addEventListener('resize',resize);document.fonts?.ready.then(resize);
+ $('fontSmaller').addEventListener('click',resize);$('fontLarger').addEventListener('click',resize);
+ document.addEventListener('keydown',e=>{if(!story||scroll||!modal.classList.contains('open')||document.getElementById('qpayPanel')?.open||/INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName))return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();turn(e.key==='ArrowRight'?1:-1)}});
+ return {start,reset,active:()=>!!story&&!scroll,resize};
+})();
+
 async function openStory(slug, syncUrl=true){
   if(!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))return;
   if(syncUrl && urlSlug()!==slug)history.pushState(null,'',storyUrl(slug));
+  bookReader.reset();
   activeSlug=slug;
   $('storyShare').hidden=true;
   $('storyShare').querySelector('.copy-preview')?.remove();
@@ -349,7 +432,9 @@ async function openStory(slug, syncUrl=true){
       $('readerText').append(note,actions);
       requestAnimationFrame(updateReaderProgress);
     }
+    bookReader.start(s);
   }catch(e){
+    bookReader.reset();
     $('readerTitle').textContent='Алдаа';
     $('readerText').textContent=e.message;
   }
@@ -449,6 +534,7 @@ async function loadStories(){
 }
 
 function closeModal(syncUrl=true){
+  bookReader.reset();
   const payment=document.getElementById('qpayPanel');if(payment){if(payment.open)payment.close();payment.remove();}
   modal.classList.remove('open');
   document.body.style.overflow='';
