@@ -62,6 +62,7 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
 @media(prefers-reduced-motion:reduce){.card,.btn,.discovery-tile,.account-actions button{transition:none}}
 .cover.has-image:before,.cover.has-image:after{display:none}
 .rq-panel{background:#fffefa;border:1px solid #e6e5dc;border-radius:24px;padding:clamp(20px,5vw,48px);max-width:850px;margin:auto;box-shadow:0 12px 45px #10241e0a}.rq-panel h2{margin:10px 0}.rq-panel p{line-height:1.75;color:#536359}.rq-note{display:block;margin-top:24px;color:#68766d;line-height:1.6}.rq-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:20px 0}.rq-option{font:inherit;text-align:left;background:#f5f6ef;border:1px solid #dce3d7;border-radius:12px;padding:14px;cursor:pointer;color:#193f30}.rq-option:hover,.rq-option:focus-visible{background:#e2eddf}.rq-track{height:8px;background:#e6ebe3;border-radius:20px;overflow:hidden;margin:12px 0 22px}.rq-track span{display:block;height:100%;background:#49775c;transition:width .2s}.rq-score{margin:10px 0}.rq-score .rq-track{margin:5px 0 12px}.rq-recs{display:grid;gap:8px;margin:18px 0}.rq-recs button{text-align:left}.rq-actions{display:flex;gap:10px;flex-wrap:wrap;margin:15px 0}.rq-panel button:focus-visible{outline:3px solid #b68e49;outline-offset:2px}
+.payment-dialog{box-sizing:border-box;width:min(440px,calc(100% - 28px));max-height:calc(100dvh - 32px);margin:auto;border:1px solid #e8e1d4;border-radius:16px;padding:0;background:#fffdf8;color:#15231d;box-shadow:0 24px 80px #0006;overflow:auto}.payment-dialog::backdrop{background:#0c1914b8;backdrop-filter:blur(3px)}.payment-inner{padding:22px;line-height:1.6}.payment-top{display:flex;align-items:center;justify-content:space-between;gap:12px}.payment-top h3{margin:0;font-size:22px}.payment-close{background:none;border:0;font-size:28px;cursor:pointer;color:#314438;padding:0 8px}.payment-row{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f1f1e9;border-radius:9px;padding:10px 12px;margin:8px 0}.payment-row>div{min-width:0}.payment-row small,.payment-row strong{display:block;overflow-wrap:anywhere}.payment-row small{color:#657368;font-size:12px}.payment-copy{flex-shrink:0;border:1px solid #cad6c8;border-radius:8px;padding:9px 12px;background:#fff;color:#214a35;cursor:pointer;font-weight:700}.payment-check{width:100%;justify-content:center}.payment-status:empty{display:none}.payment-status{color:#87501f;font-size:14px}.payment-inner .note{font-size:13px}.payment-dialog button:focus-visible{outline:2px solid #b68e49;outline-offset:2px}
 </style>
 </head>
 <body>
@@ -319,118 +320,77 @@ function clearReaderActions(){
   if(old)old.remove();
 
   const panel=document.getElementById('qpayPanel');
-  if(panel)panel.remove();
+  if(panel){if(panel.open)panel.close();panel.remove();}
 }
 
 async function buyStory(slug){
+  if(document.getElementById('qpayPanel'))return;
+  const trigger=document.activeElement;
+  const dialog=document.createElement('dialog');
+  dialog.id='qpayPanel';
+  dialog.className='payment-dialog';
+  dialog.setAttribute('aria-labelledby','paymentHeading');
+  const panel=document.createElement('div');
+  panel.className='payment-inner';
+  const top=document.createElement('div');top.className='payment-top';
+  const heading=document.createElement('h3');heading.id='paymentHeading';heading.textContent='Төлбөрийн мэдээлэл';
+  const close=document.createElement('button');close.type='button';close.className='payment-close';close.textContent='×';close.setAttribute('aria-label','Төлбөрийн цонх хаах');close.onclick=()=>dialog.close();
+  top.append(heading,close);panel.append(top);
+  const content=document.createElement('div');panel.append(content);dialog.append(panel);document.body.append(dialog);
+  dialog.addEventListener('close',()=>{dialog.remove();if(trigger?.isConnected)trigger.focus()});
+  dialog.addEventListener('click',e=>{if(e.target===dialog)dialog.close()});
+  dialog.addEventListener('keydown',e=>{if(e.key==='Escape')e.stopPropagation()});
+  dialog.showModal();
+  const message=(text)=>{const p=document.createElement('p');p.textContent=text;return p};
+  content.append(message('Төлбөрийн мэдээлэл бэлтгэж байна…'));
+  function copyButton(value,label){
+    const button=document.createElement('button');button.type='button';button.className='payment-copy';button.textContent='Хуулах';button.setAttribute('aria-label',label+' хуулах');
+    button.onclick=async()=>{
+      try{
+        if(!navigator.clipboard?.writeText)throw Error('clipboard unavailable');
+        await navigator.clipboard.writeText(String(value));
+      }catch{
+        const field=document.createElement('textarea');field.value=String(value);field.style.cssText='position:fixed;left:0;top:0;opacity:0';dialog.append(field);field.select();
+        let ok=false;try{ok=document.execCommand('copy')}catch{}field.remove();
+        if(!ok){button.textContent='Хуулж чадсангүй';return}
+      }
+      button.textContent='Хууллаа ✓';setTimeout(()=>{button.textContent='Хуулах'},1800)
+    };return button
+  }
   try{
     const d=await api('/api/payments/create','POST',{slug});
-
-    if(d.alreadyUnlocked){
-      await openStory(slug);
-      return;
-    }
-
-    const oldPanel=document.getElementById('qpayPanel');
-    if(oldPanel)oldPanel.remove();
-
-    const panel=document.createElement('div');
-    panel.id='qpayPanel';
-    panel.style.cssText='margin-top:18px;padding:18px;border:1px solid #e8e1d4;background:#fffdf8;border-radius:8px;line-height:1.8';
-
-    const heading=document.createElement('h3');
-    heading.textContent='Төлбөрийн мэдээлэл';
-    panel.append(heading);
-
-    const intro=document.createElement('p');
-    intro.textContent='Доорх дансанд яг тохирох дүнгээр шилжүүлэг хийнэ үү.';
-    panel.append(intro);
-
-    const details=[
+    if(!dialog.open||activeSlug!==slug)return;
+    if(d.alreadyUnlocked){dialog.close();await openStory(slug);return}
+    content.replaceChildren();
+    content.append(message('Доорх дансанд яг тохирох дүнгээр шилжүүлэг хийнэ үү.'));
+    const rows=[
       ['Банк',d.bank||'ХААН Банк'],
-      ['Дансны дугаар',d.accountNumber||'5622631514'],
-      ['IBAN',d.iban||'47000500'],
+      ['Дансны дугаар',d.accountNumber||'5622631514',d.accountNumber||'5622631514'],
+      ['IBAN',d.iban||'47000500',d.iban||'47000500'],
       ['Данс эзэмшигч',d.accountName||'NERGUI ENKHBAT'],
-      ['Төлөх дүн',Number(d.amount).toLocaleString('mn-MN')+'₮']
+      ['Төлөх дүн',Number(d.amount).toLocaleString('mn-MN')+'₮',String(d.amount)],
+      ['Захиалгын дугаар',d.orderId,d.orderId]
     ];
-
-    details.forEach(([label,value])=>{
-      const line=document.createElement('p');
-      line.style.margin='7px 0';
-
-      const strong=document.createElement('strong');
-      strong.textContent=label+': ';
-
-      const span=document.createElement('span');
-      span.textContent=value;
-
-      line.append(strong,span);
-      panel.append(line);
-    });
-
-    const orderTitle=document.createElement('h3');
-    orderTitle.textContent='Таны захиалгын дугаар';
-    panel.append(orderTitle);
-
-    const orderId=document.createElement('p');
-    orderId.textContent=d.orderId;
-    orderId.style.cssText='padding:12px;background:#f1eee6;border-radius:5px;overflow-wrap:anywhere;font-weight:700';
-    panel.append(orderId);
-
-    const copy=document.createElement('button');
-    copy.className='btn secondary';
-    copy.style.cssText='background:transparent;color:#15231d;border-color:#c99d55;margin-bottom:10px';
-    copy.textContent='Захиалгын дугаар хуулах';
-    copy.onclick=async()=>{
-      try{
-        await navigator.clipboard.writeText(d.orderId);
-        alert('Захиалгын дугаар хуулагдлаа.');
-      }catch{
-        alert('Захиалгын дугаар: '+d.orderId);
-      }
-    };
-    panel.append(copy);
-
-    const warning=document.createElement('p');
-    warning.textContent='Бүртгэл шаардлагагүй. Төлбөр баталгаажсаны дараа 48 цаг энэ хөтөч дээр унших эрхтэй. Хөтчийн cookie-г устгахгүй, өөр төхөөрөмж рүү шилжихгүй байхыг анхаарна уу. Шилжүүлсний дараа “Төлбөрөө шалгах” товчийг дарна уу.';
-    warning.className='note';
-    panel.append(warning);
-
-    const check=document.createElement('button');
-    check.className='btn';
-    check.textContent='Төлбөрөө шалгах';
-
+    for(const [label,value,copyValue] of rows){
+      const line=document.createElement('div');line.className='payment-row';
+      const info=document.createElement('div');const name=document.createElement('small');name.textContent=label;
+      const val=document.createElement('strong');val.textContent=value;info.append(name,val);line.append(info);
+      if(copyValue!==undefined)line.append(copyButton(copyValue,label));content.append(line)
+    }
+    const warning=message('Бүртгэл шаардлагагүй. Төлбөр баталгаажсаны дараа 48 цаг энэ хөтөч дээр унших эрхтэй. Хөтчийн cookie-г устгахгүй, өөр төхөөрөмж рүү шилжихгүй байхыг анхаарна уу. Шилжүүлсний дараа “Төлбөрөө шалгах” товчийг дарна уу.');warning.className='note';content.append(warning);
+    const status=message('');status.setAttribute('role','status');status.className='payment-status';content.append(status);
+    const check=document.createElement('button');check.type='button';check.className='btn payment-check';check.textContent='Төлбөрөө шалгах';content.append(check);
     check.onclick=async()=>{
-      check.disabled=true;
-      check.textContent='Шалгаж байна...';
-
+      check.disabled=true;check.textContent='Шалгаж байна…';status.textContent='';
       try{
-        const result=await api(
-          '/api/payments/status',
-          'POST',
-          {orderId:d.orderId}
-        );
-
-        if(result.paid&&result.unlocked){
-          alert('Төлбөр баталгаажлаа. Өгүүллэг 48 цагийн хугацаатай нээгдлээ.');
-          await openStory(slug);
-        }else{
-          alert(result.paid?'Энэ худалдан авалтын 48 цагийн унших эрх дууссан байна.':'Төлбөр хараахан баталгаажаагүй байна. Дараа дахин шалгана уу.');
-        }
-      }catch(error){
-        alert(error.message);
-      }finally{
-        check.disabled=false;
-        check.textContent='Төлбөрөө шалгах';
-      }
+        const result=await api('/api/payments/status','POST',{orderId:d.orderId});
+        if(!dialog.open||activeSlug!==slug)return;
+        if(result.paid&&result.unlocked){dialog.close();await openStory(slug)}
+        else status.textContent=result.paid?'Энэ худалдан авалтын 48 цагийн унших эрх дууссан байна.':'Төлбөр хараахан баталгаажаагүй байна. Дараа дахин шалгана уу.';
+      }catch(error){status.textContent=error.message}
+      finally{check.disabled=false;check.textContent='Төлбөрөө шалгах'}
     };
-
-    panel.append(check);
-    $('readerText').append(panel);
-
-  }catch(error){
-    alert(error.message);
-  }
+  }catch(error){if(dialog.open){content.replaceChildren(message(error.message));}}
 }
 
 async function loadStories(){
@@ -448,6 +408,7 @@ async function loadStories(){
 }
 
 function closeModal(syncUrl=true){
+  const payment=document.getElementById('qpayPanel');if(payment){if(payment.open)payment.close();payment.remove();}
   modal.classList.remove('open');
   document.body.style.overflow='';
   activeSlug='';
@@ -464,7 +425,7 @@ modal.addEventListener('click',e=>{
 });
 
 document.addEventListener('keydown',e=>{
-  if(e.key==='Escape'){closeModal();authClose()};
+  if(e.key==='Escape'&&!document.getElementById('qpayPanel')?.open){closeModal();authClose()};
 });
 
 loadStories();
