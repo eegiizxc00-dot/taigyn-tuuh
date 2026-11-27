@@ -14,6 +14,7 @@ export async function onRequestGet({request,env,params}) {
   expiresAt=grant?.expires_at?grant.expires_at.replace(' ','T')+'Z':null;
  }
  const unlocked=Boolean(expiresAt);
+ let audioParts=[];try{const {results=[]}=await env.DB.prepare('SELECT DISTINCT part FROM story_audio_chunks WHERE story_id=?').bind(s.id).all();audioParts=results.map(r=>r.part)}catch{}
  const {continuation_text,...publicStory}=s;
- return json({story:{...publicStory,unlocked,expiresAt,continuation:unlocked?continuation_text:null}});
+ return json({story:{...publicStory,unlocked,expiresAt,audioParts,continuation:unlocked?continuation_text:null}});
 }
