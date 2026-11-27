@@ -66,7 +66,13 @@ html{scroll-padding-top:88px}body{background:var(--cream);font-family:'DM Sans',
 .reader-free-text{-webkit-user-select:text;user-select:text}.reader-paid-text{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 #storyShare:not([hidden]){display:flex;flex-wrap:wrap;align-items:center;gap:8px}
 </style>
-<link rel="icon" type="image/svg+xml" href="/images/khukh-bekh-logo.svg"><link rel="stylesheet" href="/brand.css?v=book-scene-3"></head>
+<link rel="icon" type="image/svg+xml" href="/images/khukh-bekh-logo.svg"><link rel="stylesheet" href="/brand.css?v=book-scene-3"><style>
+#bookReader .bk-audio-mode[hidden],#bookReader .bk-audio-panel[hidden]{display:none!important}
+#bookReader.bk-listening .bk-spread,#bookReader.bk-listening .bk-nav,#bookReader.bk-listening .bk-sound{display:none!important}
+#bookReader.bk-listening .bk-audio-panel{max-width:680px;margin:20px auto;padding:clamp(16px,4vw,32px);border:1px solid #c7ad70;border-radius:16px;background:#10283d;color:#fff0b5;box-shadow:0 8px 30px #0002;text-align:center}
+.bk-audio-panel h3{margin:0 0 8px;color:inherit;font-size:1.35rem}.bk-audio-panel p{line-height:1.6;font-size:.95rem}.bk-audio-track{margin:20px 0;text-align:left;background:#ffffff0b;padding:12px;border:1px solid #fff0b54d;border-radius:10px}.bk-audio-track strong{display:block;margin-bottom:10px}.bk-audio-track audio{display:block;width:100%;max-width:100%;height:48px}.bk-audio-panel button{max-width:100%;white-space:normal}.bk-audio-panel select{background:#fff9e6;color:#10283d;padding:6px 10px;border-radius:6px;margin:0 4px}
+#bookReader .bk-toolbar{flex-wrap:wrap}
+</style></head>
 <body>
 <header><div class="wrap nav"><a class="brand" href="#top"><span class="mark"><img class="brand-logo" src="/images/khukh-bekh-logo.svg" alt="" width="44" height="44"></span><span>Хөх бэх</span></a><button class="mobile-menu-toggle" id="mobileMenuToggle" type="button" aria-expanded="false" aria-controls="mobileSiteNav" aria-label="Цэс нээх"><span aria-hidden="true">☰</span><span>Цэс</span></button><nav class="navlinks" id="mobileSiteNav" aria-label="Үндсэн цэс"><a href="#stories">Зохиолууд</a><a href="#readerQuiz">Уншигчийн тест</a><a href="/classics.html">Үнэгүй сонгодог</a><a href="/mongolian-history.html">Монголын түүх</a><a href="#about">Бидний тухай</a><a href="#contact">Холбоо барих</a></nav><div class="account-actions"><span class="signedin" id="signedInEmail" hidden></span><button id="navLogin" type="button">Нэвтрэх</button><button id="navRegister" type="button" class="primary">Бүртгэл үүсгэх</button><button id="navLogout" type="button" hidden>Гарах</button></div></div></header>
 <main id="top">
@@ -278,10 +284,10 @@ $('readerText').addEventListener('copy',event=>{
 /* Book reader. Only server-authorized story text enters this view. */
 const bookReader=(()=>{
  const host=document.createElement('section');host.id='bookReader';host.hidden=true;
- host.innerHTML='<div class="bk-toolbar"><button type="button" class="bk-mode">Гүйлгэж унших</button><button type="button" class="bk-sound" aria-pressed="false">Чимээ: унтраалттай</button></div><div class="bk-spread" aria-live="polite"></div><div class="bk-nav"><button type="button" class="bk-prev">← Өмнөх</button><span class="bk-count"></span><button type="button" class="bk-next">Дараах →</button></div>';
+ host.innerHTML='<div class="bk-toolbar"><button type="button" class="bk-mode">Гүйлгэж унших</button><button type="button" class="bk-audio-mode" hidden>♪ Сонсох горим</button><button type="button" class="bk-sound" aria-pressed="false">Чимээ: унтраалттай</button></div><div class="bk-audio-panel" hidden></div><div class="bk-spread" aria-live="polite"></div><div class="bk-nav"><button type="button" class="bk-prev">← Өмнөх</button><span class="bk-count"></span><button type="button" class="bk-next">Дараах →</button></div>';
  const original=$('readerText');original.before(host);
- const q=s=>host.querySelector(s),spread=q('.bk-spread'),mode=q('.bk-mode'),sound=q('.bk-sound');
- let story=null,pages=[],index=0,cols=1,scroll=false,muted=true,audio=null,timer,expiry,turnTimer,gesture=null,locked=false;
+ const q=s=>host.querySelector(s),spread=q('.bk-spread'),mode=q('.bk-mode'),sound=q('.bk-sound'),listen=q('.bk-audio-mode'),audioPanel=q('.bk-audio-panel');
+ let story=null,pages=[],index=0,cols=1,scroll=false,listening=false,muted=true,audio=null,timer,expiry,turnTimer,gesture=null,locked=false;
  const read=(k,d)=>{try{return localStorage.getItem(k)??d}catch{return d}};
  const write=(k,v)=>{try{localStorage.setItem(k,v)}catch{}};
  muted=read('kb-book-sound','off')!=='on';
@@ -295,7 +301,7 @@ const bookReader=(()=>{
  function element(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;return e}
  function validPaid(){return story?.unlocked&&story.continuation&&(!story.expiresAt||Date.parse(story.expiresAt)>Date.now())}
  function paginate(a){
-  if(!story||scroll||host.hidden)return;
+  if(!story||scroll||listening||host.hidden)return;
   clearTimeout(turnTimer);locked=false;spread.classList.remove('bk-turn-next','bk-turn-prev');
   cols=matchMedia('(min-width: 761px)').matches?2:1;
   spread.style.setProperty('--bk-cols',cols);
@@ -361,7 +367,7 @@ const bookReader=(()=>{
   $('readerProgressBar').style.width=Math.min(100,(index+cols)/pages.length*100)+'%';remember();
  }
  function turn(dir){
-  if(!story||scroll||locked||index+dir*cols<0||index+dir*cols>=pages.length)return;
+  if(!story||scroll||listening||locked||index+dir*cols<0||index+dir*cols>=pages.length)return;
   if(story.unlocked&&!validPaid()){openStory(story.slug,false);return}
   locked=true;play();const cls=dir>0?'bk-turn-next':'bk-turn-prev';spread.classList.add(cls);
   const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -371,15 +377,45 @@ const bookReader=(()=>{
  spread.addEventListener('touchstart',e=>{const t=e.changedTouches[0];gesture={x:t.clientX,y:t.clientY}},{passive:true});
  spread.addEventListener('touchend',e=>{if(!gesture)return;const t=e.changedTouches[0],dx=t.clientX-gesture.x,dy=t.clientY-gesture.y;gesture=null;if(Math.abs(dx)>55&&Math.abs(dx)>Math.abs(dy)*1.5)turn(dx<0?1:-1)},{passive:true});
  host.addEventListener('copy',e=>{const sel=getSelection();if(sel&&!sel.isCollapsed&&[...host.querySelectorAll('.reader-paid-text')].some(p=>{for(let i=0;i<sel.rangeCount;i++)if(sel.getRangeAt(i).intersectsNode(p))return true;return false}))e.preventDefault()});
- mode.onclick=()=>{if(!story)return;remember();scroll=!scroll;write('kb-book-mode',scroll?'scroll':'book');applyMode()};
- function applyMode(){host.classList.toggle('bk-scroll',scroll);original.hidden=!scroll;readerBox.classList.toggle('book-active',!scroll);mode.textContent=scroll?'Номын горим':'Гүйлгэж унших';if(!scroll){let a;try{a=JSON.parse(read(key(),'null'))}catch{}paginate(a)}else updateReaderProgress()}
- function reset(){clearTimeout(timer);clearTimeout(expiry);clearTimeout(turnTimer);locked=false;story=null;pages=[];host.hidden=true;original.hidden=false;readerBox.classList.remove('book-active');spread.replaceChildren()}
- function start(s){reset();story=s;host.hidden=false;scroll=read('kb-book-mode','book')==='scroll';applyMode();if(s.unlocked&&s.expiresAt){const ms=Date.parse(s.expiresAt)-Date.now();expiry=setTimeout(()=>{if(story===s&&activeSlug===s.slug&&modal.classList.contains('open'))openStory(s.slug,false)},Math.max(0,Math.min(ms+100,2147483647)))}}
- function resize(){clearTimeout(timer);timer=setTimeout(()=>{if(story&&!scroll&&!host.hidden&&modal.classList.contains('open'))paginate(anchor())},100)}
+ const hasAudio=()=>Array.isArray(story?.audioParts)&&story.audioParts.includes('preview');
+ function stopNarration(clear=false){for(const player of audioPanel.querySelectorAll('audio')){player.pause();if(clear){player.removeAttribute('src');player.load()}}if(clear)audioPanel.replaceChildren()}
+ function buildAudio(){
+  stopNarration(true);
+  const heading=element('h3','','♪ '+story.title),desc=element('p','','Монгол хүүрнэх хоолойгоор өгүүллэгээ сонсоорой.');
+  const rateLabel=element('label','','Унших хурд: '),speed=element('select');speed.setAttribute('aria-label','Сонсох хурд');
+  for(const n of [.75,1,1.25,1.5]){const opt=element('option','',n+'×');opt.value=String(n);speed.append(opt)}speed.value='1';
+  speed.onchange=()=>audioPanel.querySelectorAll('audio').forEach(a=>a.playbackRate=Number(speed.value));rateLabel.append(speed);audioPanel.append(heading,desc,rateLabel);
+  function track(part,label){
+   const wrap=element('div','bk-audio-track'),a=element('audio');a.controls=true;a.preload='none';
+   a.setAttribute('controlsList','nodownload');a.setAttribute('aria-label',label);a.src='/api/audio/'+encodeURIComponent(story.slug)+'?part='+part;
+   const storageKey='kb-audio-position:'+story.slug+':'+part;
+   a.addEventListener('loadedmetadata',()=>{const v=Number(read(storageKey,'0'));if(v>0&&v<a.duration-5)a.currentTime=v});
+   a.addEventListener('timeupdate',()=>{write(storageKey,String(a.currentTime));if(listening&&a.duration)$('readerProgressBar').style.width=(100*a.currentTime/a.duration)+'%'});
+   a.addEventListener('play',()=>{if(part==='paid'&&!validPaid()){a.pause();openStory(story.slug,false);return}audioPanel.querySelectorAll('audio').forEach(other=>{if(other!==a)other.pause()})});
+   a.addEventListener('ended',()=>write(storageKey,'0'));
+   const report=element('p','note','');report.hidden=true;a.addEventListener('error',()=>{report.textContent='Аудиог ачаалж чадсангүй. Өгүүллэгийг дахин нээгээд оролдоно уу.';report.hidden=false});
+   wrap.append(element('strong','',label),a,report);audioPanel.append(wrap);return a;
+  }
+  const first=track('preview','Үнэгүй эхлэл');
+  if(story.complete_free)return;
+  if(validPaid()&&story.audioParts.includes('paid')){
+   const second=track('paid','Бүтэн үргэлжлэл · 48 цагийн эрх');
+   first.addEventListener('ended',()=>{if(validPaid())second.play().catch(()=>{})});
+  }else if(!validPaid()){
+   const note=element('p','','Үргэлжлэлийг нээснээр 48 цаг уншиж, сонсох боломжтой.');
+   const buy=element('button','btn','Үргэлжлэлийг нээх · '+Number(story.price_mnt).toLocaleString('mn-MN')+'₮');buy.type='button';buy.onclick=()=>buyStory(story.slug);audioPanel.append(note,buy);
+  }else audioPanel.append(element('p','','Төлбөртэй үргэлжлэлийн аудио удахгүй нэмэгдэнэ.'));
+ }
+ mode.onclick=()=>{if(!story)return;remember();if(listening){listening=false;scroll=false}else scroll=!scroll;write('kb-book-mode',scroll?'scroll':'book');applyMode()};
+ listen.onclick=()=>{if(!hasAudio())return;remember();listening=!listening;write('kb-book-mode',listening?'audio':scroll?'scroll':'book');if(listening&&!audioPanel.children.length)buildAudio();applyMode()};
+ function applyMode(){host.classList.toggle('bk-scroll',scroll&&!listening);host.classList.toggle('bk-listening',listening);original.hidden=listening||!scroll;audioPanel.hidden=!listening;readerBox.classList.toggle('book-active',!scroll&&!listening);listen.hidden=!hasAudio();listen.textContent=listening?'Унших горим':'♪ Сонсох горим';mode.textContent=listening||scroll?'Номын горим':'Гүйлгэж унших';if(listening){if(!audioPanel.children.length)buildAudio();return}stopNarration();if(!scroll){let a;try{a=JSON.parse(read(key(),'null'))}catch{}paginate(a)}else updateReaderProgress()}
+ function reset(){clearTimeout(timer);clearTimeout(expiry);clearTimeout(turnTimer);locked=false;stopNarration(true);listening=false;audioPanel.hidden=true;host.classList.remove('bk-listening');story=null;pages=[];host.hidden=true;original.hidden=false;readerBox.classList.remove('book-active');spread.replaceChildren()}
+ function start(s){reset();story=s;host.hidden=false;scroll=read('kb-book-mode','book')==='scroll';listening=hasAudio()&&read('kb-book-mode','book')==='audio';applyMode();if(s.unlocked&&s.expiresAt){const ms=Date.parse(s.expiresAt)-Date.now();expiry=setTimeout(()=>{if(story===s&&activeSlug===s.slug&&modal.classList.contains('open'))openStory(s.slug,false)},Math.max(0,Math.min(ms+100,2147483647)))}}
+ function resize(){clearTimeout(timer);timer=setTimeout(()=>{if(story&&!scroll&&!listening&&!host.hidden&&modal.classList.contains('open'))paginate(anchor())},100)}
  window.addEventListener('resize',resize);document.fonts?.ready.then(resize);
  $('fontSmaller').addEventListener('click',resize);$('fontLarger').addEventListener('click',resize);
- document.addEventListener('keydown',e=>{if(!story||scroll||!modal.classList.contains('open')||document.getElementById('qpayPanel')?.open||/INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName))return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();turn(e.key==='ArrowRight'?1:-1)}});
- return {start,reset,active:()=>!!story&&!scroll,resize};
+ document.addEventListener('keydown',e=>{if(!story||scroll||listening||!modal.classList.contains('open')||document.getElementById('qpayPanel')?.open||/INPUT|TEXTAREA|SELECT|BUTTON/.test(e.target.tagName))return;if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();turn(e.key==='ArrowRight'?1:-1)}});
+ return {start,reset,active:()=>!!story&&!scroll&&!listening,resize};
 })();
 
 async function openStory(slug, syncUrl=true){
